@@ -59,7 +59,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={createUserMutation.isPending}
-                className="glass-card-dark border-0 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50"
+                className="glass-card-dark border-0 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500/50"
               />
             </div>
             

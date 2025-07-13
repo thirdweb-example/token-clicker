@@ -50,8 +50,7 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 
    - Get your thirdweb secret key from the [thirdweb dashboard](https://thirdweb.com/dashboard)
    - Deploy or have access to an ERC-20 token contract
-   - Set up a treasury wallet with sufficient token balance
-   - Configure the chain ID for your blockchain network
+   - Set up a treasury server wallet with sufficient token balance
 
 4. **Run the Development Server**
 
@@ -92,6 +91,10 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 - `POST /api/reward` - Send tokens to user (called on target hit)
 - `GET /api/transaction/[id]` - Get transaction status
 - `GET /api/transactions` - List recent transactions
+
+### thirdweb Integration
+
+All thirdweb API logic is contained in [`src/lib/thirdweb.ts`](src/lib/thirdweb.ts). This file handles wallet creation, token transfers, balance queries, and transaction management through the thirdweb SDK.
 
 ### Components
 
@@ -142,4 +145,4 @@ const REWARD_AMOUNT = "10000000000000000"; // 0.01 tokens (18 decimals)
 
 ## License
 
-This project is for educational purposes. Please ensure you have proper licensing for any blockchain networks and token contracts you use.
+Apache 2.0. This project is for educational purposes.
