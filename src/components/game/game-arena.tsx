@@ -14,8 +14,8 @@ interface GameArenaProps {
 }
 
 const GAME_DURATION = 10000 // 10 seconds in milliseconds
-const TARGET_SPAWN_INTERVAL = 2000 // 2 seconds
-const TARGET_LIFETIME = 3000 // 3 seconds before target disappears
+const TARGET_SPAWN_INTERVAL = 1000 // 2 seconds
+const TARGET_LIFETIME = 2000 // 3 seconds before target disappears
 
 interface LaserBeam {
   id: string
@@ -47,8 +47,15 @@ export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: G
   const gameTimerRef = useRef<NodeJS.Timeout>()
   const targetSpawnTimerRef = useRef<NodeJS.Timeout>()
 
-  // Notify parent of game state changes
+  // Notify parent of game state changes – but skip the very first render to
+  // avoid triggering a parent state update while the component tree is still
+  // mounting (which React warns about).
+  const didMountRef = useRef(false)
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
     onGameStateChange?.(gameState)
   }, [gameState, onGameStateChange])
 

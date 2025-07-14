@@ -152,6 +152,22 @@ export default function HomePage() {
     // Could show a game over modal or stats here
   }, [])
 
+  const handleTransactionStatusUpdate = useCallback((transactionId: string, status: 'pending' | 'confirmed' | 'failed') => {
+    // Update local transaction status
+    setTransactions(prev => 
+      prev.map(tx => 
+        tx.transactionHash === transactionId 
+          ? { ...tx, status, confirmedAt: status === 'confirmed' ? new Date().toISOString() : null }
+          : tx
+      )
+    )
+    
+    // Remove from active polling if confirmed or failed
+    if (status === 'confirmed' || status === 'failed') {
+      setActiveTransactionIds(prev => prev.filter(id => id !== transactionId))
+    }
+  }, [setTransactions, setActiveTransactionIds])
+
   // Check for saved user on component mount
   useEffect(() => {
     const hasLoadedUser = loadUserFromStorage()
@@ -209,21 +225,7 @@ export default function HomePage() {
             <TransactionPollingManager
               transactions={transactions}
               activeTransactionIds={activeTransactionIds}
-              onTransactionUpdate={(transactionId, status) => {
-                // Update local transaction status
-                setTransactions(prev => 
-                  prev.map(tx => 
-                    tx.transactionHash === transactionId 
-                      ? { ...tx, status, confirmedAt: status === 'confirmed' ? new Date().toISOString() : null }
-                      : tx
-                  )
-                )
-                
-                // Remove from active polling if confirmed or failed
-                if (status === 'confirmed' || status === 'failed') {
-                  setActiveTransactionIds(prev => prev.filter(id => id !== transactionId))
-                }
-              }}
+              onTransactionUpdate={handleTransactionStatusUpdate}
             />
           </div>
         </div>
