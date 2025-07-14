@@ -66,9 +66,9 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
             <h1 className="text-3xl font-bold text-white glow-text">
               Welcome, {user.username}! 🎯
             </h1>
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
               <div className="text-sm text-gray-200">
-                🔗 Wallet: {formatWalletAddress(user.walletAddress)}
+                🔗 {formatWalletAddress(user.walletAddress)}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -89,14 +89,14 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
                     onClick={onLogout}
                     className="px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-all duration-300 rounded-lg hover:bg-red-500/20 border border-red-500/30"
                   >
-                    Switch Account
+                    Logout
                   </button>
                 )}
               </div>
             </div>
           </div>
           
-          <div className="text-right relative">
+          <div className="flex-1 text-right relative">
             <div className={`text-3xl font-bold glow-text mb-2 transition-all duration-300 ${
               isAnimating 
                 ? 'text-green-300 scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]' 
