@@ -5,6 +5,7 @@ import { User } from '@/lib/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatWalletAddress, formatTokenAmount } from '@/lib/utils'
 import { useBalance } from '@/lib/hooks/use-game-api'
+import { useSound } from '@/lib/contexts/sound-context'
 
 interface GameHeaderProps {
   user: User
@@ -16,6 +17,8 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
     data: balance, 
     isLoading: isBalanceLoading
   } = useBalance(user.walletAddress)
+
+  const { isEnabled: soundEnabled, toggleSound, playBalanceUpdateSound, playClickSound } = useSound()
 
   const [isAnimating, setIsAnimating] = useState(false)
   const [showIncrement, setShowIncrement] = useState(false)
@@ -34,6 +37,9 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
         setIsAnimating(true)
         setShowIncrement(true)
         
+        // Play balance update sound
+        playBalanceUpdateSound()
+        
         // Reset animation after duration
         setTimeout(() => {
           setIsAnimating(false)
@@ -50,7 +56,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
     if (balance?.data) {
       previousBalanceRef.current = balance.data
     }
-  }, [balance?.data, isBalanceLoading])
+  }, [balance?.data, isBalanceLoading, playBalanceUpdateSound])
 
   return (
     <Card className="w-full glass-card border-0">
@@ -64,14 +70,29 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
               <div className="text-sm text-gray-200">
                 🔗 Wallet: {formatWalletAddress(user.walletAddress)}
               </div>
-              {onLogout && (
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={onLogout}
-                  className="px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-all duration-300 rounded-lg hover:bg-red-500/20 border border-red-500/30"
+                  onClick={() => {
+                    toggleSound()
+                  }}
+                  className={`px-3 py-2 text-sm transition-all duration-300 rounded-lg border ${
+                    soundEnabled
+                      ? 'text-green-400 hover:text-green-300 border-green-500/30 hover:bg-green-500/20'
+                      : 'text-gray-400 hover:text-gray-300 border-gray-500/30 hover:bg-gray-500/20'
+                  }`}
+                  title={soundEnabled ? 'Disable sounds' : 'Enable sounds'}
                 >
-                  Switch Account
+                  {soundEnabled ? '🔊' : '🔇'}
                 </button>
-              )}
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="px-4 py-2 text-sm text-red-400 hover:text-red-300 transition-all duration-300 rounded-lg hover:bg-red-500/20 border border-red-500/30"
+                  >
+                    Switch Account
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           

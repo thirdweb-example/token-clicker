@@ -265,4 +265,90 @@
   100% {
     background-position: 200% 0;
   }
+}
+
+/* Laser gun animations */
+@keyframes laser-shoot {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  30% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes laser-draw {
+  0% {
+    stroke-dashoffset: 1000;
+    opacity: 1;
+  }
+  30% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes laser-beam-fade {
+  0% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes gun-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px #ffffff, 0 0 10px #7b68ee;
+  }
+  50% {
+    box-shadow: 0 0 10px #ffffff, 0 0 20px #7b68ee;
+  }
+}
+
+@keyframes muzzle-flash {
+  0% {
+    transform: translateX(-50%) scale(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Laser beam styles */
+.laser-beam {
+  /* Override default origin so the beam no longer scales from the extreme
+     left of the arena. We’ll animate the individual <line> instead. */
+  animation: laser-beam-fade 0.3s ease-out;
+}
+
+/* Animate the line itself so it appears to extend from the gun outward */
+.laser-beam line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: laser-draw 0.3s ease-out forwards;
+}
+
+.laser-gun {
+  cursor: crosshair;
+  transform-origin: center;
 } 
