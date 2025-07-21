@@ -9,6 +9,7 @@ import { useSound } from '@/lib/contexts/sound-context'
 interface GameArenaProps {
   user: User
   onTargetHit: (targetId: string) => void
+  onTargetMiss?: () => void
   onGameEnd: (score: number) => void
   onGameStateChange?: (gameState: GameState) => void
 }
@@ -26,8 +27,8 @@ interface LaserBeam {
   targetId: string
 }
 
-export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: GameArenaProps) {
-  const { playTargetHitSound } = useSound()
+export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameStateChange }: GameArenaProps) {
+  const { playTargetHitSound, playTargetMissSound } = useSound()
   
   const [gameState, setGameState] = useState<GameState>({
     timeLeft: GAME_DURATION / 1000,
@@ -221,9 +222,6 @@ export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: G
       setLaserBeams([])
     }, 200)
 
-    // Play target hit sound
-    playTargetHitSound()
-
     // Check if click hit any target
     const hitTarget = gameState.targets.find(target => {
       const targetCenterX = target.x + 30
@@ -235,6 +233,9 @@ export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: G
     })
 
     if (hitTarget) {
+      // Play target hit sound
+      playTargetHitSound()
+      
       // Only process target hit if we actually hit a target
       setGameState(prev => {
         onTargetHit(hitTarget.id)
@@ -245,8 +246,14 @@ export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: G
           targets: prev.targets.filter(t => t.id !== hitTarget.id),
         }
       })
+    } else {
+      // Play target miss sound
+      playTargetMissSound()
+      
+      // Player missed - apply penalty
+      onTargetMiss?.()
     }
-  }, [gunPos.x, gunPos.y, playTargetHitSound, gameState.targets, gameState.isPlaying, onTargetHit])
+  }, [gunPos.x, gunPos.y, playTargetHitSound, playTargetMissSound, gameState.targets, gameState.isPlaying, onTargetHit, onTargetMiss])
 
   // No separate target click handler is required – clicks on a target should
   // bubble up to the arena so the existing logic handles them.
@@ -404,7 +411,6 @@ export function GameArena({ user, onTargetHit, onGameEnd, onGameStateChange }: G
             <div className="text-center glass-card p-8 rounded-2xl border-0">
               <h3 className="text-3xl font-bold mb-4 text-white glow-text">🎉 Game Over!</h3>
               <div className="text-6xl mb-4">🏆</div>
-              <p className="text-xl mb-6 text-gray-200">Final Score: <span className="text-green-400 font-bold">{gameState.score}</span></p>
               <Button 
                 onClick={startGame} 
                 size="lg"

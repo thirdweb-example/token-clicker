@@ -84,9 +84,14 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">💎</span>
-                    <span className="font-bold text-green-400 glow-text">
-                      +0.01 tokens
+                    <span className="text-2xl">{transaction.amount.startsWith('-') ? '💸' : '💎'}</span>
+                    <span className={`font-bold glow-text ${
+                      transaction.amount.startsWith('-') ? 'text-red-400' : 'text-green-400'
+                    }`}>
+                      {transaction.amount.startsWith('-') ? 
+                        `${transaction.amount} tokens` : 
+                        `+${transaction.amount} tokens`
+                      }
                     </span>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-300 ${getStatusColor(transaction.status)}`}>

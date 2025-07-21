@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { User, Transaction, GameState } from '@/lib/types'
+import { User, Transaction, GameState, SessionStats } from '@/lib/types'
 import { LoginForm } from '@/components/game/login-form'
 import { GameHeader } from '@/components/game/game-header'
 import { GameArena } from '@/components/game/game-arena'
 import { GameInfo } from '@/components/game/game-info'
 import { TransactionList } from '@/components/game/transaction-list'
 import { generateUniqueId } from '@/lib/utils'
-import { useSendReward, useTransaction } from '@/lib/hooks/use-game-api'
+import { useSendReward, useSendPenalty, useTransaction } from '@/lib/hooks/use-game-api'
 
 const USER_STORAGE_KEY = 'token-clicker-user'
 
@@ -25,8 +25,15 @@ export default function HomePage() {
     isGameOver: false,
   })
   
+  const [sessionStats, setSessionStats] = useState<SessionStats>({
+    hits: 0,
+    misses: 0,
+    totalGains: 0,
+  })
+  
   // React Query hooks
   const sendRewardMutation = useSendReward()
+  const sendPenaltyMutation = useSendPenalty()
   
   // Use ref to prevent duplicate transactions
   const processingTargetsRef = useRef<Set<string>>(new Set())
@@ -94,7 +101,73 @@ export default function HomePage() {
         processingTargetsRef.current.delete(targetId)
       }, 1000)
     }
+
+    // Update session stats for successful hit
+    setSessionStats(prev => ({
+      ...prev,
+      hits: prev.hits + 1,
+      totalGains: prev.totalGains + 0.01,
+    }))
   }, [user, sendRewardMutation])
+
+  // Handle target miss - debit tokens and track transaction
+  const handleTargetMiss = useCallback(async () => {
+    if (!user) return
+    
+    // Prevent new transactions while one is already being processed
+    if (sendPenaltyMutation.isPending) {
+      return
+    }
+
+    // Create a pending transaction for the penalty
+    const pendingTransaction: Transaction = {
+      id: generateUniqueId(),
+      transactionHash: null,
+      amount: '-0.05',
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      confirmedAt: null,
+    }
+
+    // Add to local transactions list
+    setTransactions(prev => [pendingTransaction, ...prev])
+
+    try {
+      // Send penalty using React Query mutation
+      const result = await sendPenaltyMutation.mutateAsync(user.walletAddress)
+      const transactionId = result.transactionIds[0]
+
+      // Update transaction with transaction ID and start polling
+      setTransactions(prev => 
+        prev.map(tx => 
+          tx.id === pendingTransaction.id 
+            ? { ...tx, transactionHash: transactionId }
+            : tx
+        )
+      )
+
+      // Add to active transaction IDs for polling
+      setActiveTransactionIds(prev => [...prev, transactionId])
+
+    } catch (error) {
+      console.error('Error applying penalty:', error)
+      // Mark as failed
+      setTransactions(prev => 
+        prev.map(tx => 
+          tx.id === pendingTransaction.id 
+            ? { ...tx, status: 'failed' }
+            : tx
+        )
+      )
+    }
+
+    // Update session stats for miss
+    setSessionStats(prev => ({
+      ...prev,
+      misses: prev.misses + 1,
+      totalGains: prev.totalGains - 0.05,
+    }))
+  }, [user, sendPenaltyMutation])
 
   // Handle game state changes from GameArena
   const handleGameStateChange = useCallback((newGameState: GameState) => {
@@ -134,6 +207,7 @@ export default function HomePage() {
       setUser(null)
       setTransactions([])
       setActiveTransactionIds([])
+      setSessionStats({ hits: 0, misses: 0, totalGains: 0 })
       processingTargetsRef.current.clear()
     } catch (error) {
       console.error('Failed to clear user from localStorage:', error)
@@ -215,13 +289,14 @@ export default function HomePage() {
             <GameArena 
               user={user}
               onTargetHit={handleTargetHit}
+              onTargetMiss={handleTargetMiss}
               onGameEnd={handleGameEnd}
               onGameStateChange={handleGameStateChange}
             />
           </div>
           
           <div className="lg:col-span-1 space-y-6">
-            <GameInfo gameState={gameState} />
+            <GameInfo gameState={gameState} sessionStats={sessionStats} />
             <TransactionPollingManager
               transactions={transactions}
               activeTransactionIds={activeTransactionIds}

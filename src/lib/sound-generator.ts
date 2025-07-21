@@ -78,8 +78,48 @@ export class SoundGenerator {
     harmonicOsc.stop(now + 0.15)
   }
 
-  // Generate a balance update sound (coins/money sound)
-  async generateBalanceUpdateSound(volume: number = 0.5) {
+  // Generate a target miss sound (disappointing "whoosh")
+  async generateTargetMissSound(volume: number = 0.5) {
+    // Extra safety check - don't generate sound if volume is 0
+    if (volume <= 0) return
+    
+    const context = await this.ensureAudioContext()
+    if (!context) return
+
+    const now = context.currentTime
+    
+    // Create a "whoosh" miss sound with noise and low frequency
+    const oscillator = context.createOscillator()
+    const gainNode = context.createGain()
+    const filter = context.createBiquadFilter()
+    
+    oscillator.connect(filter)
+    filter.connect(gainNode)
+    gainNode.connect(context.destination)
+    
+    // Use sawtooth for harsher sound
+    oscillator.type = 'sawtooth'
+    // Low frequency sweep downward for disappointment
+    oscillator.frequency.setValueAtTime(200, now)
+    oscillator.frequency.exponentialRampToValueAtTime(80, now + 0.3)
+    
+    // Low-pass filter for muffled effect
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(400, now)
+    filter.frequency.exponentialRampToValueAtTime(100, now + 0.3)
+    filter.Q.setValueAtTime(0.5, now)
+    
+    // Quick fade in, slow fade out
+    gainNode.gain.setValueAtTime(0, now)
+    gainNode.gain.linearRampToValueAtTime(volume * 0.4, now + 0.05)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4)
+    
+    oscillator.start(now)
+    oscillator.stop(now + 0.4)
+  }
+
+  // Generate a positive balance update sound (coins/money sound)
+  async generateTokenGainSound(volume: number = 0.5) {
     // Extra safety check - don't generate sound if volume is 0
     if (volume <= 0) return
     
@@ -108,6 +148,50 @@ export class SoundGenerator {
       
       oscillator.start(startTime)
       oscillator.stop(startTime + 0.4)
+    })
+  }
+
+  // Generate a negative balance update sound (loss/penalty sound)
+  async generateTokenLossSound(volume: number = 0.5) {
+    // Extra safety check - don't generate sound if volume is 0
+    if (volume <= 0) return
+    
+    const context = await this.ensureAudioContext()
+    if (!context) return
+
+    const now = context.currentTime
+    
+    // Create a "penalty" sound with dissonant frequencies
+    const frequencies = [220, 233, 196] // Dissonant minor intervals for negative feeling
+    
+    frequencies.forEach((freq, index) => {
+      const oscillator = context.createOscillator()
+      const gainNode = context.createGain()
+      const filter = context.createBiquadFilter()
+      
+      oscillator.connect(filter)
+      filter.connect(gainNode)
+      gainNode.connect(context.destination)
+      
+      oscillator.type = 'triangle'
+      oscillator.frequency.setValueAtTime(freq, now)
+      oscillator.frequency.exponentialRampToValueAtTime(freq * 0.7, now + 0.5) // Descending
+      
+      // Low-pass filter for muffled, sad effect
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(800, now)
+      filter.frequency.exponentialRampToValueAtTime(300, now + 0.5)
+      filter.Q.setValueAtTime(1, now)
+      
+      const delay = index * 0.08
+      const startTime = now + delay
+      
+      gainNode.gain.setValueAtTime(0, startTime)
+      gainNode.gain.linearRampToValueAtTime(volume * 0.2, startTime + 0.05)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6)
+      
+      oscillator.start(startTime)
+      oscillator.stop(startTime + 0.6)
     })
   }
 

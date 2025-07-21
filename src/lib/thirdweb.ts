@@ -36,28 +36,6 @@ export async function createWallet(identifier: string) {
   return response
 }
 
-export async function getWalletBalance(address: string, chainId: number) {
-  const response = await makeThirdwebRequest(
-    `/v1/wallets/${address}/balance?chainId=${chainId}`,
-    {
-      method: 'GET',
-    }
-  )
-
-  return response.result
-}
-
-export async function getWalletTokens(address: string, chainId: number) {
-  const response = await makeThirdwebRequest(
-    `/v1/wallets/${address}/tokens?chainId=${chainId}`,
-    {
-      method: 'GET',
-    }
-  )
-
-  return response
-}
-
 export async function readContract(calls: ContractReadCall[], chainId: number) {
   const response = await makeThirdwebRequest('/v1/contracts/read', {
     method: 'POST',

@@ -21,6 +21,12 @@ export interface GameState {
   isGameOver: boolean;
 }
 
+export interface SessionStats {
+  hits: number;
+  misses: number;
+  totalGains: number;
+}
+
 export interface Transaction {
   id: string;
   transactionHash: string | null;

@@ -16,7 +16,9 @@ interface SoundContextType {
   isEnabled: boolean
   volume: number
   playTargetHitSound: (options?: SoundOptions) => void
-  playBalanceUpdateSound: (options?: SoundOptions) => void
+  playTargetMissSound: (options?: SoundOptions) => void
+  playTokenGainSound: (options?: SoundOptions) => void
+  playTokenLossSound: (options?: SoundOptions) => void
   playClickSound: (options?: SoundOptions) => void
   toggleSound: () => void
   setVolume: (volume: number) => void
@@ -59,11 +61,25 @@ export function SoundProvider({ children }: SoundProviderProps) {
     soundGenerator.generateTargetHitSound(volume)
   }, [soundState])
 
-  const playBalanceUpdateSound = useCallback((options: SoundOptions = {}) => {
+  const playTargetMissSound = useCallback((options: SoundOptions = {}) => {
     if (!soundState.isEnabled) return
     
     const volume = options.volume ?? soundState.volume
-    soundGenerator.generateBalanceUpdateSound(volume)
+    soundGenerator.generateTargetMissSound(volume)
+  }, [soundState])
+
+  const playTokenGainSound = useCallback((options: SoundOptions = {}) => {
+    if (!soundState.isEnabled) return
+    
+    const volume = options.volume ?? soundState.volume
+    soundGenerator.generateTokenGainSound(volume)
+  }, [soundState])
+
+  const playTokenLossSound = useCallback((options: SoundOptions = {}) => {
+    if (!soundState.isEnabled) return
+    
+    const volume = options.volume ?? soundState.volume
+    soundGenerator.generateTokenLossSound(volume)
   }, [soundState])
 
   const playClickSound = useCallback((options: SoundOptions = {}) => {
@@ -85,7 +101,9 @@ export function SoundProvider({ children }: SoundProviderProps) {
     isEnabled: soundState.isEnabled,
     volume: soundState.volume,
     playTargetHitSound,
-    playBalanceUpdateSound,
+    playTargetMissSound,
+    playTokenGainSound,
+    playTokenLossSound,
     playClickSound,
     toggleSound,
     setVolume,

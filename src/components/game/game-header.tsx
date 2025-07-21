@@ -18,11 +18,12 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
     isLoading: isBalanceLoading
   } = useBalance(user.walletAddress)
 
-  const { isEnabled: soundEnabled, toggleSound, playBalanceUpdateSound, playClickSound } = useSound()
+  const { isEnabled: soundEnabled, toggleSound, playTokenGainSound, playTokenLossSound, playClickSound } = useSound()
 
   const [isAnimating, setIsAnimating] = useState(false)
   const [showIncrement, setShowIncrement] = useState(false)
   const [incrementAmount, setIncrementAmount] = useState('')
+  const [isPositiveChange, setIsPositiveChange] = useState(true)
   const previousBalanceRef = useRef<string | null>(null)
 
   // Track balance changes and trigger animation
@@ -31,14 +32,25 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
       const currentBalance = parseFloat(balance.data)
       const previousBalance = parseFloat(previousBalanceRef.current)
       
-      if (currentBalance > previousBalance) {
+      if (currentBalance !== previousBalance) {
         const difference = currentBalance - previousBalance
-        setIncrementAmount(`+${formatTokenAmount(difference.toString())}`)
+        const isIncrease = difference > 0
+        
+        setIncrementAmount(
+          isIncrease 
+            ? `+${formatTokenAmount(Math.abs(difference).toString())}`
+            : `-${formatTokenAmount(Math.abs(difference).toString())}`
+        )
+        setIsPositiveChange(isIncrease)
         setIsAnimating(true)
         setShowIncrement(true)
         
-        // Play balance update sound
-        playBalanceUpdateSound()
+        // Play appropriate sound based on gain or loss
+        if (isIncrease) {
+          playTokenGainSound()
+        } else {
+          playTokenLossSound()
+        }
         
         // Reset animation after duration
         setTimeout(() => {
@@ -56,7 +68,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
     if (balance?.data) {
       previousBalanceRef.current = balance.data
     }
-  }, [balance?.data, isBalanceLoading, playBalanceUpdateSound])
+  }, [balance?.data, isBalanceLoading, playTokenGainSound, playTokenLossSound])
 
   return (
     <Card className="w-full glass-card border-0">
@@ -99,7 +111,9 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
           <div className="flex-1 text-right relative">
             <div className={`text-3xl font-bold glow-text mb-2 transition-all duration-300 ${
               isAnimating 
-                ? 'text-green-300 scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]' 
+                ? isPositiveChange 
+                  ? 'text-green-300 scale-110 drop-shadow-[0_0_15px_rgba(34,197,94,0.8)]' 
+                  : 'text-red-300 scale-110 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]'
                 : 'text-green-400'
             }`}>
               {isBalanceLoading ? (
@@ -111,8 +125,12 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
             
             {/* Floating increment indicator */}
             {showIncrement && (
-              <div className="absolute -top-6 -right-2 animate-bounce">
-                <div className="bg-green-500/20 text-green-300 px-2 py-1 rounded-full text-sm font-bold border border-green-500/30 animate-pulse">
+              <div className={`absolute -top-6 -right-2 ${isPositiveChange ? 'animate-bounce' : 'animate-pulse'}`}>
+                <div className={`px-2 py-1 rounded-full text-sm font-bold border animate-pulse ${
+                  isPositiveChange 
+                    ? 'bg-green-500/20 text-green-300 border-green-500/30' 
+                    : 'bg-red-500/20 text-red-300 border-red-500/30'
+                }`}>
                   {incrementAmount}
                 </div>
               </div>

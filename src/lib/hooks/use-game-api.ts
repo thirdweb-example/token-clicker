@@ -83,6 +83,39 @@ export function useSendReward() {
   })
 }
 
+// Penalty Mutations
+export function useSendPenalty() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (playerAddress: string) => {
+      const response = await fetch('/api/penalty', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerAddress }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to apply penalty')
+      }
+
+      return response.json()
+    },
+    onSuccess: (data: any, playerAddress: string) => {
+      // Invalidate balance to refetch updated amount
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.balance(playerAddress)
+      })
+      
+      // Invalidate transactions to show new transaction
+      queryClient.invalidateQueries({
+        queryKey: ['transactions']
+      })
+    },
+  })
+}
+
 // Transaction Queries
 export function useTransaction(transactionId: string | null, enabled = true) {
   return useQuery({
