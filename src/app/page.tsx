@@ -134,20 +134,45 @@ export default function HomePage() {
 
     try {
       // Send penalty using React Query mutation
-      const result = await sendPenaltyMutation.mutateAsync(user.walletAddress)
-      const transactionId = result.transactionIds[0]
+      const result = await sendPenaltyMutation.mutateAsync({ 
+        playerAddress: user.walletAddress,
+        authToken: user.authToken 
+      })
+      
+      const actualPenalty = parseFloat(result.actualAmount) / Math.pow(10, 18) // Convert from wei to tokens
+      
+      // Only create transaction record if there was actually a transfer
+      if (result.transactionIds && result.transactionIds.length > 0) {
+        const transactionId = result.transactionIds[0]
 
-      // Update transaction with transaction ID and start polling
-      setTransactions(prev => 
-        prev.map(tx => 
-          tx.id === pendingTransaction.id 
-            ? { ...tx, transactionHash: transactionId }
-            : tx
+        // Update transaction with transaction ID and start polling
+        setTransactions(prev => 
+          prev.map(tx => 
+            tx.id === pendingTransaction.id 
+              ? { ...tx, transactionHash: transactionId, amount: `-${actualPenalty.toFixed(2)}` }
+              : tx
+          )
         )
-      )
 
-      // Add to active transaction IDs for polling
-      setActiveTransactionIds(prev => [...prev, transactionId])
+        // Add to active transaction IDs for polling
+        setActiveTransactionIds(prev => [...prev, transactionId])
+      } else {
+        // No transaction was created (user had no balance)
+        setTransactions(prev => 
+          prev.map(tx => 
+            tx.id === pendingTransaction.id 
+              ? { ...tx, status: 'confirmed', amount: '0.00' }
+              : tx
+          )
+        )
+      }
+
+      // Update session stats for miss with actual penalty amount
+      setSessionStats(prev => ({
+        ...prev,
+        misses: prev.misses + 1,
+        totalGains: prev.totalGains - actualPenalty,
+      }))
 
     } catch (error) {
       console.error('Error applying penalty:', error)
@@ -159,14 +184,13 @@ export default function HomePage() {
             : tx
         )
       )
-    }
 
-    // Update session stats for miss
-    setSessionStats(prev => ({
-      ...prev,
-      misses: prev.misses + 1,
-      totalGains: prev.totalGains - 0.05,
-    }))
+      // Still count the miss even if penalty failed
+      setSessionStats(prev => ({
+        ...prev,
+        misses: prev.misses + 1,
+      }))
+    }
   }, [user, sendPenaltyMutation])
 
   // Handle game state changes from GameArena

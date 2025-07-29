@@ -6,6 +6,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const address = searchParams.get('address')
+    
+    // Check for auth token
+    const authToken = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!authToken) {
+      return NextResponse.json(
+        { error: 'Authentication token required' },
+        { status: 401 }
+      )
+    }
 
     if (!address) {
       return NextResponse.json(

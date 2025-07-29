@@ -1,7 +1,8 @@
 export interface User {
   id: string;
-  username: string;
+  email: string;
   walletAddress: string;
+  authToken: string;
   smartWalletAddress?: string;
   createdAt: string;
 }

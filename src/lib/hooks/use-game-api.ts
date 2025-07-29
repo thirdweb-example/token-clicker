@@ -9,34 +9,20 @@ export const QUERY_KEYS = {
   transaction: (id: string) => ['transaction', id],
 } as const
 
-// User Mutations
-export function useCreateUser() {
-  return useMutation({
-    mutationFn: async (username: string): Promise<{ user: User }> => {
-      const response = await fetch('/api/user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
-      })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create user')
-      }
-
-      return response.json()
-    },
-  })
-}
 
 // Balance Queries
-export function useBalance(address: string | null, enabled = true) {
+export function useBalance(address: string | null, authToken: string | null, enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.balance(address || ''),
     queryFn: async () => {
-      if (!address) throw new Error('No address provided')
+      if (!address || !authToken) throw new Error('No address or auth token provided')
       
-      const response = await fetch(`/api/balance?address=${address}`)
+      const response = await fetch(`/api/balance?address=${address}`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      })
       if (!response.ok) {
         throw new Error('Failed to fetch balance')
       }
@@ -44,7 +30,7 @@ export function useBalance(address: string | null, enabled = true) {
       const data = await response.json()
       return data.balance
     },
-    enabled: enabled && !!address,
+    enabled: enabled && !!address && !!authToken,
     staleTime: 4 * 1000, // 4 seconds
     refetchInterval: 5 * 1000, // 5 seconds
   })
@@ -88,10 +74,13 @@ export function useSendPenalty() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async (playerAddress: string) => {
+    mutationFn: async ({ playerAddress, authToken }: { playerAddress: string; authToken: string }) => {
       const response = await fetch('/api/penalty', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
         body: JSON.stringify({ playerAddress }),
       })
 
@@ -102,7 +91,7 @@ export function useSendPenalty() {
 
       return response.json()
     },
-    onSuccess: (data: any, playerAddress: string) => {
+    onSuccess: (data: any, { playerAddress }: { playerAddress: string; authToken: string }) => {
       // Invalidate balance to refetch updated amount
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.balance(playerAddress)

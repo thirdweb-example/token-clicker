@@ -5,27 +5,81 @@ import { User } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCreateUser } from '@/lib/hooks/use-game-api'
 
 interface LoginFormProps {
   onLogin: (user: User) => void
 }
 
 export function LoginForm({ onLogin }: LoginFormProps) {
-  const [username, setUsername] = useState('')
-  const createUserMutation = useCreateUser()
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!username.trim()) return
+    if (!email.trim()) return
+
+    setIsLoading(true)
+    setError('')
 
     try {
-      const result = await createUserMutation.mutateAsync(username.trim())
+      const response = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send code')
+      }
+
+      setStep('code')
+    } catch (error) {
+      console.error('Failed to send code:', error)
+      setError(error instanceof Error ? error.message : 'Failed to send code')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!code.trim()) return
+
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: code.trim() }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to verify code')
+      }
+
+      const result = await response.json()
       onLogin(result.user)
     } catch (error) {
-      console.error('Login failed:', error)
+      console.error('Failed to verify code:', error)
+      setError(error instanceof Error ? error.message : 'Failed to verify code')
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const handleBackToEmail = () => {
+    setStep('email')
+    setCode('')
+    setError('')
   }
 
   return (
@@ -48,42 +102,92 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">
-                🎮 Choose your username
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter your username..."
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={createUserMutation.isPending}
-                className="glass-card-dark border-0 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500/50"
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full gradient-button text-white font-bold py-3 rounded-xl border-0"
-              disabled={createUserMutation.isPending || !username.trim()}
-            >
-              {createUserMutation.isPending ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                  🔄 Creating your wallet...
-                </div>
-              ) : (
-                '🎯 Start Playing!'
-              )}
-            </Button>
-            
-            {createUserMutation.error && (
-              <div className="text-red-400 text-sm text-center bg-red-400/20 p-3 rounded-lg border border-red-400/30">
-                ❌ {createUserMutation.error.message}
+          {step === 'email' ? (
+            <form onSubmit={handleSendCode} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  📧 Enter your email address
+                </label>
+                <Input
+                  type="email"
+                  placeholder="Enter your email..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="glass-card-dark border-0 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500/50"
+                />
               </div>
-            )}
-          </form>
+              
+              <Button
+                type="submit"
+                className="w-full gradient-button text-white font-bold py-3 rounded-xl border-0"
+                disabled={isLoading || !email.trim()}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    📤 Sending code...
+                  </div>
+                ) : (
+                  '📤 Send Login Code'
+                )}
+              </Button>
+              
+              {error && (
+                <div className="text-red-400 text-sm text-center bg-red-400/20 p-3 rounded-lg border border-red-400/30">
+                  ❌ {error}
+                </div>
+              )}
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyCode} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  🔑 Enter the 6-digit code sent to {email}
+                </label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  disabled={isLoading}
+                  className="glass-card-dark border-0 text-white placeholder:text-gray-300 focus:ring-2 focus:ring-blue-500/50 text-center text-2xl tracking-widest"
+                  maxLength={6}
+                />
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full gradient-button text-white font-bold py-3 rounded-xl border-0"
+                disabled={isLoading || code.length !== 6}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    🔄 Verifying...
+                  </div>
+                ) : (
+                  '🎯 Start Playing!'
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBackToEmail}
+                className="w-full text-black bg-gray-400 border-gray-600 hover:bg-gray-800"
+                disabled={isLoading}
+              >
+                ← Back to email
+              </Button>
+              
+              {error && (
+                <div className="text-red-400 text-sm text-center bg-red-400/20 p-3 rounded-lg border border-red-400/30">
+                  ❌ {error}
+                </div>
+              )}
+            </form>
+          )}
           
           <div className="mt-6 text-center text-xs text-gray-400">
             <p>🔐 Your wallet will be created automatically</p>
