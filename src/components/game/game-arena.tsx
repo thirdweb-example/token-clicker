@@ -15,8 +15,10 @@ interface GameArenaProps {
 }
 
 const GAME_DURATION = 10000 // 10 seconds in milliseconds
-const TARGET_SPAWN_INTERVAL = 1000 // 2 seconds
+const TARGET_SPAWN_INTERVAL = 500 // half a second
 const TARGET_LIFETIME = 2000 // 3 seconds before target disappears
+const BASE_TARGET_SIZE = 50 // Base target size in pixels
+const SIZE_REDUCTION_PERCENT = 0.05 // 5% reduction per target as requested
 
 interface LaserBeam {
   id: string
@@ -47,6 +49,7 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
   const arenaRef = useRef<HTMLDivElement>(null)
   const gameTimerRef = useRef<NodeJS.Timeout>()
   const targetSpawnTimerRef = useRef<NodeJS.Timeout>()
+  const targetCountRef = useRef(0) // Track number of targets spawned using ref
 
   // Notify parent of game state changes – but skip the very first render to
   // avoid triggering a parent state update while the component tree is still
@@ -111,6 +114,9 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
       score: 0,
       targets: [],
     }))
+    
+    // Reset target count for new game
+    targetCountRef.current = 0
 
     // Start game timer
     const startTime = Date.now()
@@ -157,10 +163,14 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
     if (!arenaRef.current) return
 
     const arena = arenaRef.current
+    
+    // Calculate target size: each target is 5% smaller than the previous one
+    const targetSize = BASE_TARGET_SIZE - (BASE_TARGET_SIZE * SIZE_REDUCTION_PERCENT * targetCountRef.current)
+    
     const { x, y } = generateRandomPosition(
       arena.clientWidth,
       arena.clientHeight,
-      60
+      targetSize / 2 // Use radius for positioning
     )
 
     const newTarget: GameTarget = {
@@ -168,12 +178,17 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
       x,
       y,
       active: true,
+      size: targetSize,
     }
 
+    // Add target to game state
     setGameState(prev => ({
       ...prev,
       targets: [...prev.targets, newTarget],
     }))
+    
+    // Increment target count for next spawn
+    targetCountRef.current += 1
 
     // Remove target after lifetime
     setTimeout(() => {
@@ -224,12 +239,13 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
 
     // Check if click hit any target
     const hitTarget = gameState.targets.find(target => {
-      const targetCenterX = target.x + 30
-      const targetCenterY = target.y + 30
+      const targetRadius = target.size / 2
+      const targetCenterX = target.x + targetRadius
+      const targetCenterY = target.y + targetRadius
       const distance = Math.sqrt(
         Math.pow(clickX - targetCenterX, 2) + Math.pow(clickY - targetCenterY, 2)
       )
-      return distance <= 30 // Target radius
+      return distance <= targetRadius
     })
 
     if (hitTarget) {
@@ -292,6 +308,8 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
             style={{
               left: `${target.x}px`,
               top: `${target.y}px`,
+              width: `${target.size}px`,
+              height: `${target.size}px`,
             }}
           />
         ))}

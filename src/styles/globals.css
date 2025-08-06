@@ -81,8 +81,6 @@
 .game-target {
   @apply absolute rounded-full cursor-pointer transition-all duration-300 ease-out;
   @apply shadow-2xl hover:shadow-xl;
-  width: 60px;
-  height: 60px;
   background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   border: 3px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);

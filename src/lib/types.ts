@@ -12,6 +12,7 @@ export interface GameTarget {
   x: number;
   y: number;
   active: boolean;
+  size: number; // Size in pixels (width and height)
 }
 
 export interface GameState {
