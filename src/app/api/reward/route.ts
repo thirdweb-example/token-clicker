@@ -1,21 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { transferTokens } from '@/lib/thirdweb'
+import { transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 
 const REWARD_AMOUNT = '10000000000000000' // 0.01 tokens (assuming 18 decimals)
 
 export async function POST(request: NextRequest) {
   try {
-    const { playerAddress } = await request.json()
+    // Get auth token from headers
+    const authToken = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!authToken) {
+      return NextResponse.json(
+        { error: 'Authentication token required' },
+        { status: 401 }
+      )
+    }
 
+    // Get user details from auth token
+    let userDetails
+    try {
+      userDetails = await getUserDetails(authToken)
+    } catch (error) {
+      console.error('Error fetching user details:', error)
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
+        { status: 401 }
+      )
+    }
+
+    const playerAddress = userDetails.address
     if (!playerAddress) {
       return NextResponse.json(
-        { error: 'Player address is required' },
+        { error: 'No wallet address found for user' },
         { status: 400 }
       )
     }
 
-    // Transfer tokens from treasury to player
+    const { gameSessionData } = await request.json()
+
+    // Optional: Validate game session data if provided
+    if (gameSessionData) {
+      const { gameStartTime, targetHitTime } = gameSessionData
+      
+      // Validate that the hit happened during an active game
+      if (!gameStartTime || !targetHitTime) {
+        return NextResponse.json(
+          { error: 'Invalid game session data' },
+          { status: 400 }
+        )
+      }
+      
+      // Check if hit time is within reasonable game duration (max 10 seconds per game)
+      const timeSinceGameStart = targetHitTime - gameStartTime
+      if (timeSinceGameStart < 0 || timeSinceGameStart > 10000) {
+        return NextResponse.json(
+          { error: 'Invalid game timing' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Transfer tokens from treasury to player using treasury auth (no player auth needed for receiving)
     const result = await transferTokens(
       env.TREASURY_WALLET_ADDRESS,
       playerAddress,

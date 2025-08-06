@@ -41,11 +41,20 @@ export function useSendReward() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async (playerAddress: string) => {
+    mutationFn: async ({ authToken, gameSessionData }: { 
+      authToken: string;
+      gameSessionData?: {
+        gameStartTime: number;
+        targetHitTime: number;
+      }
+    }) => {
       const response = await fetch('/api/reward', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerAddress }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ gameSessionData }),
       })
 
       if (!response.ok) {
@@ -55,10 +64,10 @@ export function useSendReward() {
 
       return response.json()
     },
-    onSuccess: (data: any, playerAddress: string) => {
-      // Invalidate balance to refetch updated amount
+    onSuccess: (data: any, { authToken }: { authToken: string; gameSessionData?: any }) => {
+      // Invalidate all balance queries since we don't have playerAddress anymore
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.balance(playerAddress)
+        queryKey: ['balance']
       })
       
       // Invalidate transactions to show new transaction
@@ -74,14 +83,14 @@ export function useSendPenalty() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ playerAddress, authToken }: { playerAddress: string; authToken: string }) => {
+    mutationFn: async ({ authToken }: { authToken: string }) => {
       const response = await fetch('/api/penalty', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ playerAddress }),
+        body: JSON.stringify({}),
       })
 
       if (!response.ok) {
@@ -91,10 +100,10 @@ export function useSendPenalty() {
 
       return response.json()
     },
-    onSuccess: (data: any, { playerAddress }: { playerAddress: string; authToken: string }) => {
-      // Invalidate balance to refetch updated amount
+    onSuccess: (data: any, { authToken }: { authToken: string }) => {
+      // Invalidate all balance queries since we don't have playerAddress anymore
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.balance(playerAddress)
+        queryKey: ['balance']
       })
       
       // Invalidate transactions to show new transaction

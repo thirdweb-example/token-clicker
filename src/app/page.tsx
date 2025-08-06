@@ -31,6 +31,9 @@ export default function HomePage() {
     totalGains: 0,
   })
   
+  // Track game session for anti-abuse measures
+  const gameSessionRef = useRef<{ startTime: number | null }>({ startTime: null })
+  
   // React Query hooks
   const sendRewardMutation = useSendReward()
   const sendPenaltyMutation = useSendPenalty()
@@ -69,8 +72,14 @@ export default function HomePage() {
     setTransactions(prev => [pendingTransaction, ...prev])
 
     try {
-      // Send reward using React Query mutation
-      const result = await sendRewardMutation.mutateAsync(user.walletAddress)
+      // Send reward using React Query mutation with auth token and game session data
+      const result = await sendRewardMutation.mutateAsync({
+        authToken: user.authToken,
+        gameSessionData: gameSessionRef.current.startTime ? {
+          gameStartTime: gameSessionRef.current.startTime,
+          targetHitTime: Date.now()
+        } : undefined
+      })
       const transactionId = result.transactionIds[0]
 
       // Update transaction with transaction ID, mark as submitted, and start polling
@@ -135,7 +144,6 @@ export default function HomePage() {
     try {
       // Send penalty using React Query mutation
       const result = await sendPenaltyMutation.mutateAsync({ 
-        playerAddress: user.walletAddress,
         authToken: user.authToken 
       })
       
@@ -195,7 +203,16 @@ export default function HomePage() {
 
   // Handle game state changes from GameArena
   const handleGameStateChange = useCallback((newGameState: GameState) => {
-    setGameState(newGameState)
+    setGameState(prevState => {
+      // Track game session start time for anti-abuse measures
+      if (!prevState.isPlaying && newGameState.isPlaying) {
+        gameSessionRef.current.startTime = Date.now()
+      } else if (prevState.isPlaying && !newGameState.isPlaying) {
+        gameSessionRef.current.startTime = null
+      }
+      
+      return newGameState
+    })
   }, [])
 
   // Save user to localStorage
@@ -233,6 +250,7 @@ export default function HomePage() {
       setActiveTransactionIds([])
       setSessionStats({ hits: 0, misses: 0, totalGains: 0 })
       processingTargetsRef.current.clear()
+      gameSessionRef.current.startTime = null
     } catch (error) {
       console.error('Failed to clear user from localStorage:', error)
     }

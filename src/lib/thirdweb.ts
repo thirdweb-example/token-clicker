@@ -41,6 +41,17 @@ export async function createWallet(identifier: string) {
   return response;
 }
 
+export async function getUserDetails(authToken: string) {
+  const response = await makeThirdwebRequest("/v1/wallets/user/me", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${authToken}`,
+    },
+  });
+
+  return response;
+}
+
 export async function readContract(calls: ContractReadCall[], chainId: number) {
   const response = await makeThirdwebRequest("/v1/contracts/read", {
     method: "POST",

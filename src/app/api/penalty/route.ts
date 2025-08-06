@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTokenBalance, transferTokens } from '@/lib/thirdweb'
+import { getTokenBalance, transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 
 const PENALTY_AMOUNT = '50000000000000000' // 0.05 tokens (assuming 18 decimals)
@@ -15,11 +15,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { playerAddress } = await request.json()
+    // Get user details from auth token
+    let userDetails
+    try {
+      userDetails = await getUserDetails(authToken)
+    } catch (error) {
+      console.error('Error fetching user details:', error)
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
+        { status: 401 }
+      )
+    }
 
+    const playerAddress = userDetails.address
     if (!playerAddress) {
       return NextResponse.json(
-        { error: 'Player address is required' },
+        { error: 'No wallet address found for user' },
         { status: 400 }
       )
     }
