@@ -60,7 +60,7 @@ export default function HomePage() {
       id: generateUniqueId(),
       transactionHash: null,
       amount: '0.01',
-      status: 'pending',
+      status: 'QUEUED',
       createdAt: new Date().toISOString(),
       confirmedAt: null,
     }
@@ -73,11 +73,11 @@ export default function HomePage() {
       const result = await sendRewardMutation.mutateAsync(user.walletAddress)
       const transactionId = result.transactionIds[0]
 
-      // Update transaction with transaction ID and start polling
+      // Update transaction with transaction ID, mark as submitted, and start polling
       setTransactions(prev => 
         prev.map(tx => 
           tx.id === pendingTransaction.id 
-            ? { ...tx, transactionHash: transactionId }
+            ? { ...tx, transactionHash: transactionId, status: 'SUBMITTED' }
             : tx
         )
       )
@@ -91,7 +91,7 @@ export default function HomePage() {
       setTransactions(prev => 
         prev.map(tx => 
           tx.id === pendingTransaction.id 
-            ? { ...tx, status: 'failed' }
+            ? { ...tx, status: 'FAILED' }
             : tx
         )
       )
@@ -124,7 +124,7 @@ export default function HomePage() {
       id: generateUniqueId(),
       transactionHash: null,
       amount: '-0.05',
-      status: 'pending',
+      status: 'QUEUED',
       createdAt: new Date().toISOString(),
       confirmedAt: null,
     }
@@ -145,11 +145,11 @@ export default function HomePage() {
       if (result.transactionIds && result.transactionIds.length > 0) {
         const transactionId = result.transactionIds[0]
 
-        // Update transaction with transaction ID and start polling
+        // Update transaction with transaction ID, mark as submitted, and start polling
         setTransactions(prev => 
           prev.map(tx => 
             tx.id === pendingTransaction.id 
-              ? { ...tx, transactionHash: transactionId, amount: `-${actualPenalty.toFixed(2)}` }
+              ? { ...tx, transactionHash: transactionId, amount: `-${actualPenalty.toFixed(2)}`, status: 'SUBMITTED' }
               : tx
           )
         )
@@ -161,7 +161,7 @@ export default function HomePage() {
         setTransactions(prev => 
           prev.map(tx => 
             tx.id === pendingTransaction.id 
-              ? { ...tx, status: 'confirmed', amount: '0.00' }
+              ? { ...tx, status: 'CONFIRMED', amount: '0.00' }
               : tx
           )
         )
@@ -180,7 +180,7 @@ export default function HomePage() {
       setTransactions(prev => 
         prev.map(tx => 
           tx.id === pendingTransaction.id 
-            ? { ...tx, status: 'failed' }
+            ? { ...tx, status: 'FAILED' }
             : tx
         )
       )
@@ -250,18 +250,18 @@ export default function HomePage() {
     // Could show a game over modal or stats here
   }, [])
 
-  const handleTransactionStatusUpdate = useCallback((transactionId: string, status: 'pending' | 'confirmed' | 'failed') => {
+  const handleTransactionStatusUpdate = useCallback((transactionId: string, status: 'QUEUED' | 'SUBMITTED' | 'CONFIRMED' | 'FAILED') => {
     // Update local transaction status
     setTransactions(prev => 
       prev.map(tx => 
         tx.transactionHash === transactionId 
-          ? { ...tx, status, confirmedAt: status === 'confirmed' ? new Date().toISOString() : null }
+          ? { ...tx, status, confirmedAt: status === 'CONFIRMED' ? new Date().toISOString() : null }
           : tx
       )
     )
     
     // Remove from active polling if confirmed or failed
-    if (status === 'confirmed' || status === 'failed') {
+    if (status === 'CONFIRMED' || status === 'FAILED') {
       setActiveTransactionIds(prev => prev.filter(id => id !== transactionId))
     }
   }, [setTransactions, setActiveTransactionIds])
@@ -341,7 +341,7 @@ function TransactionPollingManager({
 }: {
   transactions: Transaction[]
   activeTransactionIds: string[]
-  onTransactionUpdate: (transactionId: string, status: 'pending' | 'confirmed' | 'failed') => void
+  onTransactionUpdate: (transactionId: string, status: 'QUEUED' | 'SUBMITTED' | 'CONFIRMED' | 'FAILED') => void
 }) {
   return (
     <>
@@ -363,7 +363,7 @@ function TransactionPoller({
   onStatusUpdate,
 }: {
   transactionId: string
-  onStatusUpdate: (transactionId: string, status: 'pending' | 'confirmed' | 'failed') => void
+  onStatusUpdate: (transactionId: string, status: 'QUEUED' | 'SUBMITTED' | 'CONFIRMED' | 'FAILED') => void
 }) {
   const { data: transactionData, isError } = useTransaction(transactionId, true)
 
@@ -372,13 +372,7 @@ function TransactionPoller({
       const serverTransaction = transactionData.result
       
       // Determine status based on server response
-      let status: 'pending' | 'confirmed' | 'failed' = 'pending'
-      
-      if (serverTransaction.confirmedAt) {
-        status = 'confirmed'
-      } else if (serverTransaction.errorMessage || serverTransaction.cancelledAt) {
-        status = 'failed'
-      }
+      let status: 'QUEUED' | 'SUBMITTED' | 'CONFIRMED' | 'FAILED' = serverTransaction.status
       
       onStatusUpdate(transactionId, status)
     }
@@ -386,7 +380,7 @@ function TransactionPoller({
 
   useEffect(() => {
     if (isError) {
-      onStatusUpdate(transactionId, 'failed')
+      onStatusUpdate(transactionId, 'FAILED')
     }
   }, [isError, transactionId, onStatusUpdate])
 

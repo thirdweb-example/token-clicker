@@ -175,7 +175,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                 type="button"
                 variant="outline"
                 onClick={handleBackToEmail}
-                className="w-full text-black bg-gray-400 border-gray-600 hover:bg-gray-800"
+                className="w-full gradient-button text-white font-bold py-3 rounded-xl border-0"
                 disabled={isLoading}
               >
                 ← Back to email

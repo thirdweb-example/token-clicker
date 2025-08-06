@@ -1,7 +1,10 @@
-import { env } from './env'
-import { ContractReadCall, ContractWriteCall, TransactionRequest } from './types'
+import { env } from "./env";
+import {
+  ContractReadCall,
+  ContractWriteCall,
+} from "./types";
 
-const THIRDWEB_API_URL = env.THIRDWEB_API_BASE_URL
+const THIRDWEB_API_URL = env.THIRDWEB_API_BASE_URL;
 
 async function makeThirdwebRequest(
   endpoint: string,
@@ -10,83 +13,87 @@ async function makeThirdwebRequest(
   const response = await fetch(`${THIRDWEB_API_URL}${endpoint}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      'x-secret-key': env.THIRDWEB_SECRET_KEY,
+      "Content-Type": "application/json",
+      "x-secret-key": env.THIRDWEB_SECRET_KEY,
       ...options.headers,
     },
-  })
+  });
 
   if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Thirdweb API error: ${response.status} ${response.statusText} ${error}`)
+    const error = await response.text();
+    throw new Error(
+      `Thirdweb API error: ${response.status} ${response.statusText} ${error}`
+    );
   }
 
-  const data = await response.json()
-  return data.result
+  const data = await response.json();
+  return data.result;
 }
 
 export async function createWallet(identifier: string) {
-  const response = await makeThirdwebRequest('/v1/wallets', {
-    method: 'POST',
+  const response = await makeThirdwebRequest("/v1/wallets", {
+    method: "POST",
     body: JSON.stringify({ identifier }),
-  })
+  });
 
-  console.log('response', response)
+  console.log("response", response);
 
-  return response
+  return response;
 }
 
 export async function readContract(calls: ContractReadCall[], chainId: number) {
-  const response = await makeThirdwebRequest('/v1/contracts/read', {
-    method: 'POST',
+  const response = await makeThirdwebRequest("/v1/contracts/read", {
+    method: "POST",
     body: JSON.stringify({
       calls,
       chainId,
     }),
-  })
+  });
 
-  return response
+  return response;
 }
 
-export async function writeContract(calls: ContractWriteCall[], chainId: number, from: string) {
-  const response = await makeThirdwebRequest('/v1/contracts/write', {
-    method: 'POST',
+export async function writeContract(
+  calls: ContractWriteCall[],
+  chainId: number,
+  from: string,
+  authToken?: string
+) {
+  const response = await makeThirdwebRequest("/v1/contracts/write", {
+    method: "POST",
     body: JSON.stringify({
       calls,
       chainId,
       from,
     }),
-  })
+    headers: authToken ? {
+      "Authorization": `Bearer ${authToken}`,
+    } : {},
+  });
 
-  return response
-}
-
-export async function sendTransaction(transactionRequest: TransactionRequest) {
-  const response = await makeThirdwebRequest('/v1/transactions', {
-    method: 'POST',
-    body: JSON.stringify(transactionRequest),
-  })
-
-  return response
+  return response;
 }
 
 export async function getTransaction(transactionId: string) {
-  const response = await makeThirdwebRequest(`/v1/transactions/${transactionId}`, {
-    method: 'GET',
-  })
+  const response = await makeThirdwebRequest(
+    `/v1/transactions/${transactionId}`,
+    {
+      method: "GET",
+    }
+  );
 
-  return response
+  return response;
 }
 
 export async function listTransactions(page: number = 1, limit: number = 10) {
   const response = await makeThirdwebRequest(
     `/v1/transactions?page=${page}&limit=${limit}`,
     {
-      method: 'GET',
+      method: "GET",
     }
-  )
+  );
 
-  return response
+  return response;
 }
 
 export async function transferTokens(
@@ -94,22 +101,18 @@ export async function transferTokens(
   to: string,
   amount: string,
   tokenAddress: string,
-  chainId: number
+  chainId: number,
+  authToken?: string
 ) {
-  const transactionRequest: TransactionRequest = {
-    chainId,
-    from,
-    transactions: [
-      {
-        type: 'contract-call',
-        contractAddress: tokenAddress,
-        method: 'function transfer(address to, uint256 amount)',
-        params: [to, amount],
-      },
-    ],
-  }
+  const calls: ContractWriteCall[] = [
+    {
+      contractAddress: tokenAddress,
+      method: "function transfer(address to, uint256 amount)",
+      params: [to, amount],
+    },
+  ];
 
-  return sendTransaction(transactionRequest)
+  return writeContract(calls, chainId, from, authToken);
 }
 
 export async function getTokenBalance(
@@ -120,11 +123,11 @@ export async function getTokenBalance(
   const calls: ContractReadCall[] = [
     {
       contractAddress: tokenAddress,
-      method: 'function balanceOf(address owner) view returns (uint256)',
+      method: "function balanceOf(address owner) view returns (uint256)",
       params: [walletAddress],
     },
-  ]
+  ];
 
-  const result = await readContract(calls, chainId)
-  return result[0]
-} 
+  const result = await readContract(calls, chainId);
+  return result[0];
+}

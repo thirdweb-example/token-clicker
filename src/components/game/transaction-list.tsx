@@ -19,11 +19,13 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
 
   const getStatusColor = (status: Transaction['status']) => {
     switch (status) {
-      case 'pending':
+      case 'QUEUED':
         return 'text-yellow-400 bg-yellow-400/20 border-yellow-400/30'
-      case 'confirmed':
+      case 'SUBMITTED':
+        return 'text-blue-400 bg-blue-400/20 border-blue-400/30'
+      case 'CONFIRMED':
         return 'text-green-400 bg-green-400/20 border-green-400/30'
-      case 'failed':
+      case 'FAILED':
         return 'text-red-400 bg-red-400/20 border-red-400/30'
       default:
         return 'text-gray-400 bg-gray-400/20 border-gray-400/30'
@@ -32,11 +34,13 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
 
   const getStatusText = (status: Transaction['status']) => {
     switch (status) {
-      case 'pending':
+      case 'QUEUED':
         return '⏳ Pending'
-      case 'confirmed':
+      case 'SUBMITTED':
+        return '🚀 Submitted'
+      case 'CONFIRMED':
         return '✅ Confirmed'
-      case 'failed':
+      case 'FAILED':
         return '❌ Failed'
       default:
         return '❓ Unknown'
@@ -45,11 +49,13 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
 
   const getStatusIcon = (status: Transaction['status']) => {
     switch (status) {
-      case 'pending':
+      case 'QUEUED':
         return '⏳'
-      case 'confirmed':
+      case 'SUBMITTED':
+        return '🚀'
+      case 'CONFIRMED':
         return '✅'
-      case 'failed':
+      case 'FAILED':
         return '❌'
       default:
         return '❓'
@@ -116,7 +122,7 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
                   <span className="text-xs text-gray-400">
                     🕒 {new Date(transaction.createdAt).toLocaleTimeString()}
                   </span>
-                  {transaction.status === 'pending' && (
+                  {(transaction.status === 'QUEUED' || transaction.status === 'SUBMITTED') && (
                     <div className="flex items-center gap-1 text-xs text-yellow-400">
                       <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                       Processing...

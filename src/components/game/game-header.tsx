@@ -76,7 +76,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-white glow-text">
-              Welcome, {user.email}! 🎯
+              Welcome, {user.email.split('@')[0]}!
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
               <div className="text-sm text-gray-200">

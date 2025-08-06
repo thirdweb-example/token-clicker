@@ -48,38 +48,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Transfer tokens from player to treasury using player's auth token
-    const response = await fetch(`${env.THIRDWEB_API_BASE_URL}/v1/transactions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`,
-        'x-secret-key': env.THIRDWEB_SECRET_KEY,
-      },
-      body: JSON.stringify({
-        chainId: env.CHAIN_ID,
-        from: playerAddress,
-        transactions: [
-          {
-            type: 'contract-call',
-            contractAddress: env.TOKEN_CONTRACT_ADDRESS,
-            method: 'function transfer(address to, uint256 amount)',
-            params: [env.TREASURY_WALLET_ADDRESS, transferAmount.toString()],
-          },
-        ],
-      }),
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Thirdweb penalty transaction error:', error)
-      return NextResponse.json(
-        { error: 'Failed to apply penalty' },
-        { status: 500 }
-      )
-    }
-
-    const data = await response.json()
-    const result = data.result
+    const result = await transferTokens(
+      playerAddress,
+      env.TREASURY_WALLET_ADDRESS,
+      transferAmount.toString(),
+      env.TOKEN_CONTRACT_ADDRESS,
+      env.CHAIN_ID,
+      authToken
+    )
 
     return NextResponse.json({ 
       transactionIds: result.transactionIds,

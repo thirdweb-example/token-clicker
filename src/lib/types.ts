@@ -32,7 +32,7 @@ export interface Transaction {
   id: string;
   transactionHash: string | null;
   amount: string;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: 'QUEUED' | 'SUBMITTED' | 'CONFIRMED' | 'FAILED';
   createdAt: string;
   confirmedAt: string | null;
 }
