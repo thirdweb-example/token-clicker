@@ -3,7 +3,7 @@ import { transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 import { verifySessionAndCsrf } from '@/lib/auth'
 import { toBaseUnits } from '@/lib/utils'
-import { TOKEN_CONTRACT_ADDRESS, TOKEN_DECIMALS, CHAIN_ID } from '@/lib/constants'
+import { REWARD_CONTRACT_ADDRESS, REWARD_DECIMALS, CHAIN_ID } from '@/lib/constants'
 
 // Human-readable reward amount in token units
 const REWARD_TOKENS = '0.01'
@@ -73,14 +73,14 @@ export async function POST(request: NextRequest) {
     const result = await transferTokens(
       env.TREASURY_WALLET_ADDRESS,
       playerAddress,
-      toBaseUnits(REWARD_TOKENS, TOKEN_DECIMALS),
-      TOKEN_CONTRACT_ADDRESS,
+      toBaseUnits(REWARD_TOKENS, REWARD_DECIMALS),
+      REWARD_CONTRACT_ADDRESS,
       CHAIN_ID
     )
 
     return NextResponse.json({ 
       transactionIds: result.transactionIds,
-      amount: toBaseUnits(REWARD_TOKENS, TOKEN_DECIMALS)
+      amount: toBaseUnits(REWARD_TOKENS, REWARD_DECIMALS)
     })
   } catch (error) {
     console.error('Error sending reward:', error)

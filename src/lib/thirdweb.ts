@@ -1,4 +1,5 @@
 import { env } from "./env";
+import { SCORE_CONTRACT_ADDRESS } from "./constants";
 import {
   ContractReadCall,
   ContractWriteCall,
@@ -115,13 +116,32 @@ export async function transferTokens(
   chainId: number,
   authToken?: string
 ) {
-  const calls: ContractWriteCall[] = [
-    {
-      contractAddress: tokenAddress,
-      method: "function transfer(address to, uint256 amount)",
+  const calls: ContractWriteCall[] = [];
+
+  // Always include the primary token transfer
+  calls.push({
+    contractAddress: tokenAddress,
+    method: "function transfer(address to, uint256 amount)",
+    params: [to, amount],
+  });
+
+  // If sending from treasury (reward), also mint score tokens to the recipient
+  if (from && env.TREASURY_WALLET_ADDRESS && from.toLowerCase() === env.TREASURY_WALLET_ADDRESS.toLowerCase()) {
+    calls.push({
+      contractAddress: SCORE_CONTRACT_ADDRESS,
+      method: "function mintTo(address to, uint256 amount)",
       params: [to, amount],
-    },
-  ];
+    });
+  }
+
+  // If sending to treasury (penalty), also burn score tokens from the sender
+  if (to && env.TREASURY_WALLET_ADDRESS && to.toLowerCase() === env.TREASURY_WALLET_ADDRESS.toLowerCase()) {
+    calls.push({
+      contractAddress: SCORE_CONTRACT_ADDRESS,
+      method: "function burn(uint256 amount)",
+      params: [amount],
+    });
+  }
 
   return writeContract(calls, chainId, from, authToken);
 }

@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { TOKEN_DECIMALS } from "./constants"
+import { REWARD_DECIMALS } from "./constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -10,12 +10,12 @@ export function formatWalletAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-export function formatTokenAmount(amount: string, decimals: number = TOKEN_DECIMALS): string {
+export function formatTokenAmount(amount: string, decimals: number = REWARD_DECIMALS): string {
   const value = parseFloat(amount) / Math.pow(10, decimals)
   return value.toFixed(2)
 }
 
-export function toBaseUnits(tokenAmount: string, decimals: number = TOKEN_DECIMALS): string {
+export function toBaseUnits(tokenAmount: string, decimals: number = REWARD_DECIMALS): string {
   const [whole, fraction = ''] = tokenAmount.split('.')
   const paddedFraction = (fraction + '0'.repeat(decimals)).slice(0, decimals)
   const multiplier = BigInt('1' + '0'.repeat(decimals))

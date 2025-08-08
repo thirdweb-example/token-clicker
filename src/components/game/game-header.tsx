@@ -97,7 +97,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
                     // ignore clipboard errors
                   }
                 }}
-                className="text-sm text-gray-200 hover:text-white transition-colors underline-offset-2 hover:underline"
+                className="text-sm text-left text-gray-200 hover:text-white transition-colors underline-offset-2 hover:underline"
                 title="Click to copy full address"
               >
                 🔗 {formatWalletAddress(user.walletAddress)} {copied && <span className="text-green-400">(copied)</span>}
@@ -124,17 +124,11 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
                     Logout
                   </button>
                 )}
-                <button
-                  onClick={() => setIsWithdrawOpen(true)}
-                  className="px-4 py-2 text-sm text-blue-300 hover:text-blue-200 transition-all duration-300 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 shadow-sm"
-                >
-                  Withdraw
-                </button>
               </div>
             </div>
           </div>
           
-          <div className="flex-1 text-right relative">
+          <div className="flex-1 flex-col gap-2 sm:gap-4 text-right relative">
             <div className={`text-3xl font-bold glow-text mb-2 transition-all duration-300 ${
               isAnimating 
                 ? isPositiveChange 
@@ -161,7 +155,15 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
                 </div>
               </div>
             )}
+
+<button
+                  onClick={() => setIsWithdrawOpen(true)}
+                  className="px-4 py-2 text-sm text-blue-300 hover:text-blue-200 transition-all duration-300 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 shadow-sm"
+                >
+                  Withdraw
+                </button>
           </div>
+          
         </div>
       </CardContent>
     </Card>

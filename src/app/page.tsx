@@ -10,7 +10,7 @@ import { TransactionList } from '@/components/game/transaction-list'
 import { generateUniqueId } from '@/lib/utils'
 import { useSendReward, useSendPenalty, useTransaction } from '@/lib/hooks/use-game-api'
 import { UNAUTHORIZED_EVENT } from '@/lib/client-auth'
-import { TOKEN_DECIMALS } from '@/lib/constants'
+import { REWARD_DECIMALS } from '@/lib/constants'
 
 const USER_STORAGE_KEY = 'token-clicker-user'
 
@@ -147,7 +147,7 @@ export default function HomePage() {
       // Send penalty using React Query mutation
       const result = await sendPenaltyMutation.mutateAsync({ csrfToken: user.csrfToken })
       
-      const actualPenalty = parseFloat(result.actualAmount) / Math.pow(10, TOKEN_DECIMALS) // Convert from base units
+      const actualPenalty = parseFloat(result.actualAmount) / Math.pow(10, REWARD_DECIMALS) // Convert from base units
       
       // Only create transaction record if there was actually a transfer
       if (result.transactionIds && result.transactionIds.length > 0) {

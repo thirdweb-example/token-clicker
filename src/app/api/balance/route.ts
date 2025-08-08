@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTokenBalance } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 import { verifySessionAndCsrf } from '@/lib/auth'
-import { TOKEN_CONTRACT_ADDRESS, CHAIN_ID } from '@/lib/constants'
+import { REWARD_CONTRACT_ADDRESS, CHAIN_ID } from '@/lib/constants'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // Get token balance for the specified token
     const balance = await getTokenBalance(
       address,
-      TOKEN_CONTRACT_ADDRESS,
+      REWARD_CONTRACT_ADDRESS,
       CHAIN_ID
     )
 

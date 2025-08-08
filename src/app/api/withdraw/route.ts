@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTokenBalance, transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { verifySessionAndCsrf } from '@/lib/auth'
-import { TOKEN_CONTRACT_ADDRESS, CHAIN_ID } from '@/lib/constants'
+import { REWARD_CONTRACT_ADDRESS, CHAIN_ID } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Determine full balance to withdraw
     const balance = await getTokenBalance(
       fromAddress,
-      TOKEN_CONTRACT_ADDRESS,
+      REWARD_CONTRACT_ADDRESS,
       CHAIN_ID
     )
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       fromAddress,
       recipientAddress,
       amount,
-      TOKEN_CONTRACT_ADDRESS,
+      REWARD_CONTRACT_ADDRESS,
       CHAIN_ID,
       authToken
     )

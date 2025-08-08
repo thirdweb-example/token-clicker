@@ -3,7 +3,7 @@ import { getTokenBalance, transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 import { verifySessionAndCsrf } from '@/lib/auth'
 import { toBaseUnits } from '@/lib/utils'
-import { TOKEN_CONTRACT_ADDRESS, TOKEN_DECIMALS, CHAIN_ID } from '@/lib/constants'
+import { REWARD_CONTRACT_ADDRESS, REWARD_DECIMALS, CHAIN_ID } from '@/lib/constants'
 
 // Human-readable penalty amount in token units
 const PENALTY_TOKENS = '0.05'
@@ -49,12 +49,12 @@ export async function POST(request: NextRequest) {
     // Get token balance for the specified token
     const balance = await getTokenBalance(
         playerAddress,
-        TOKEN_CONTRACT_ADDRESS,
+        REWARD_CONTRACT_ADDRESS,
         CHAIN_ID
       )
 
     const currentBalance = BigInt(balance.data)
-    const penaltyAmountBigInt = BigInt(toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS))
+    const penaltyAmountBigInt = BigInt(toBaseUnits(PENALTY_TOKENS, REWARD_DECIMALS))
 
     // Calculate actual transfer amount - use full penalty or available balance, whichever is smaller
     const transferAmount = currentBalance < penaltyAmountBigInt ? currentBalance : penaltyAmountBigInt
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (transferAmount === BigInt(0)) {
       return NextResponse.json({
         transactionIds: [],
-        amount: toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS),
+        amount: toBaseUnits(PENALTY_TOKENS, REWARD_DECIMALS),
         actualAmount: '0'
       })
     }
@@ -73,14 +73,14 @@ export async function POST(request: NextRequest) {
       playerAddress,
       env.TREASURY_WALLET_ADDRESS,
       transferAmount.toString(),
-      TOKEN_CONTRACT_ADDRESS,
+      REWARD_CONTRACT_ADDRESS,
       CHAIN_ID,
       authToken
     )
 
     return NextResponse.json({ 
       transactionIds: result.transactionIds,
-      amount: toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS),
+      amount: toBaseUnits(PENALTY_TOKENS, REWARD_DECIMALS),
       actualAmount: transferAmount.toString()
     })
   } catch (error) {
