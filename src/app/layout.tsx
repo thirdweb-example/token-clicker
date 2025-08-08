@@ -2,13 +2,29 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Providers } from './providers'
 import '@/styles/globals.css'
-import { TOKEN_SYMBOL } from '@/lib/constants'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: `Vibe Shooter`,
-  description: `A fun shooting game where you earn ${TOKEN_SYMBOL} for hitting targets`,
+  description: `A fun shooting game where you earn USDC for hitting targets`,
+  openGraph: {
+    title: `Vibe Shooter`,
+    description: `A fun shooting game where you earn USDC for hitting targets`,
+    url: '/',
+    siteName: 'Vibe Shooter',
+    type: 'website',
+    images: [
+      { url: '/screenshot.png', width: 1200, height: 630, alt: 'Vibe Shooter — earn USDC for hitting targets' },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Vibe Shooter`,
+    description: `A fun shooting game where you earn USDC for hitting targets`,
+    images: ['/screenshot.png'],
+  },
 }
 
 export default function RootLayout({
