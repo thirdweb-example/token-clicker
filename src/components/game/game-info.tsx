@@ -15,18 +15,6 @@ export function GameInfo({ gameState, sessionStats }: GameInfoProps) {
   
   return (
     <div className="text-center glass-card p-6 rounded-2xl border-0 mb-6">
-      <h2 className="text-3xl font-bold text-white glow-text mb-4">🎯 Shoot the Targets!</h2>
-      
-      <div className="grid grid-cols-2 gap-4 text-white mb-4">
-        <div className="text-center">
-          <div className="text-2xl font-bold text-blue-400 glow-text">⏱️ {gameState.timeLeft}s</div>
-          <div className="text-sm text-gray-300">Time Left</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-green-400 glow-text">🎯 {gameState.score}</div>
-          <div className="text-sm text-gray-300">Score</div>
-        </div>
-      </div>
 
       <div className="grid grid-cols-3 gap-3 text-white">
         <div className="text-center">

@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
   treasuryBalance: ['treasuryBalance'] as const,
   transactions: (page?: number, limit?: number) => ['transactions', page, limit],
   transaction: (id: string) => ['transaction', id],
+  leaderboard: ['leaderboard'] as const,
 } as const
 
 
@@ -172,6 +173,25 @@ export function useTransactions(page = 1, limit = 10) {
       return data.transactions
     },
     staleTime: 2 * 1000, // 2 seconds
+  })
+}
+
+// Leaderboard Query
+export function useLeaderboard() {
+  return useQuery<{ address: string; amount: string }[]>({
+    queryKey: QUERY_KEYS.leaderboard,
+    queryFn: async () => {
+      const response = await fetch('/api/leaderboard', { cache: 'no-store' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data?.error || 'Failed to fetch leaderboard')
+      }
+      const data = await response.json()
+      return (data?.owners || []) as { address: string; amount: string }[]
+    },
+    refetchInterval: 30 * 1000, // 30 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 15 * 1000, // 15 seconds
   })
 }
 

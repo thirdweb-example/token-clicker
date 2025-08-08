@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { GameState, GameTarget, User } from '@/lib/types'
-import { generateRandomPosition, generateUniqueId, formatTokenAmount } from '@/lib/utils'
+import { generateRandomPosition, generateUniqueId } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useSound } from '@/lib/contexts/sound-context'
+import { PrizePoolInfo } from '@/components/game/prize-pool-info'
 import { useTreasuryBalance } from '@/lib/hooks/use-game-api'
-import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface GameArenaProps {
   user: User
@@ -34,7 +34,7 @@ interface LaserBeam {
 export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameStateChange }: GameArenaProps) {
   const { playTargetHitSound, playTargetMissSound } = useSound()
   const { data: treasuryBalance, isLoading: isTreasuryLoading } = useTreasuryBalance(true)
-  const isPrizePoolEmpty = !isTreasuryLoading && (treasuryBalance?.data === '0')
+  const isPrizePoolEmpty = !isTreasuryLoading && ((treasuryBalance?.data || '0') === '0')
   
   const [gameState, setGameState] = useState<GameState>({
     timeLeft: GAME_DURATION / 1000,
@@ -304,6 +304,22 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
           <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
           <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
         </div>
+
+        {/* In-game HUD: Time Left (top-left) and Score (top-right) */}
+        {gameState.isPlaying && (
+          <>
+            <div className="absolute top-3 left-3 z-30 pointer-events-none">
+              <div className="px-3 py-1 rounded-xl bg-black/50 text-white text-sm font-semibold border border-white/10 shadow">
+                ⏱️ {gameState.timeLeft}s
+              </div>
+            </div>
+            <div className="absolute top-3 right-3 z-30 pointer-events-none">
+              <div className="px-3 py-1 rounded-xl bg-black/50 text-white text-sm font-semibold border border-white/10 shadow">
+                🎯 {gameState.score}
+              </div>
+            </div>
+          </>
+        )}
         
         {gameState.targets.map((target) => (
           <div
@@ -416,7 +432,7 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
         {!gameState.isPlaying && !gameState.isGameOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="text-center">
-              <div className="text-4xl mb-4">🎯</div>
+              <h2 className="text-3xl font-bold text-white glow-text mb-4">🎯 Shoot the Targets!</h2>
               <Button 
                 onClick={startGame}
                 disabled={isPrizePoolEmpty}
@@ -425,18 +441,7 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
               >
                 🚀 Start Game
               </Button>
-              <div className="mt-3 text-sm text-gray-200">
-                {isTreasuryLoading ? (
-                  <span className="opacity-80">Fetching prize pool...</span>
-                ) : (
-                  <span>
-                    Prize pool remaining: <span className="font-semibold text-green-300">{formatTokenAmount(treasuryBalance?.data || '0')}  {TOKEN_SYMBOL}</span>
-                  </span>
-                )}
-              </div>
-              {isPrizePoolEmpty && (
-                <div className="mt-2 text-sm font-semibold text-red-300">Come back later!</div>
-              )}
+              <PrizePoolInfo balance={treasuryBalance} isLoading={isTreasuryLoading} />
             </div>
           </div>
         )}
@@ -447,12 +452,14 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
               <h3 className="text-3xl font-bold mb-4 text-white glow-text">🎉 Game Over!</h3>
               <div className="text-6xl mb-4">🏆</div>
               <Button 
-                onClick={startGame} 
+                onClick={startGame}
+                disabled={!isTreasuryLoading && isPrizePoolEmpty}
                 size="lg"
                 className="gradient-button text-white font-bold px-8 py-4 text-lg rounded-xl border-0"
               >
                 🎯 Play Again
               </Button>
+              <PrizePoolInfo balance={treasuryBalance} isLoading={isTreasuryLoading} className="mt-4" />
             </div>
           </div>
         )}
