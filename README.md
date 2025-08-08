@@ -1,16 +1,26 @@
-# Token Clicker Game
+# Vibe shooter
 
-A fun Next.js web game that integrates with the thirdweb API to create a clicking game where players earn tokens for hitting targets.
+Vibe Shooter is a fully vibe-coded Next.js web game powered by the [AI-optimized thirdweb API](https://api.thirdweb.com/reference) which handles authentication, wallet management, gasless transactions, and more.
+
+![Vibe Shooter Screenshot](assets/screenshot.png)
+
+View the full thirdweb documentation on the [thirdweb portal](https://portal.thirdweb.com).
+
+## How to vibe code
+
+- Add the [thirdweb API `llms.txt`](https://api.thirdweb.com/llms.txt) to your repo or prompt context and start prompting.
+- Build features by prompting against your codebase + `llms.txt`. The thirdweb API covers user authentication, wallet management, gasless transactions, and more out of the box.
+- Reference endpoints and capabilities in the [thirdweb API reference](https://api.thirdweb.com/reference).
 
 ## Features
 
-- **User Authentication**: Enter a username to automatically create a wallet
-- **Persistent Sessions**: Your account is remembered - no need to re-enter username on reload
+- **User Authentication**: Email OTP login creates a wallet automatically
+- **Persistent Sessions**: Your account is remembered - no need to re-enter details on reload
 - **Clicking Game**: Click on randomly spawning targets within a 10-second timer
 - **Token Rewards**: Earn 0.01 tokens for each target hit
 - **Real-time Transactions**: See transaction status updates in real-time
 - **Balance Tracking**: View your current token balance with auto-refresh
-- **Account Switching**: Easily switch between different user accounts
+- **Account Switching**: Log out and log in with a different email anytime
 - **Responsive Design**: Built with Tailwind CSS and shadcn components
 
 ## Tech Stack
@@ -20,7 +30,7 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 - **Blockchain Integration**: thirdweb API
 - **Styling**: Tailwind CSS with custom game animations
 
-## Setup Instructions
+## Run the code
 
 1. **Install Dependencies**
 
@@ -41,14 +51,14 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
    ```env
    THIRDWEB_SECRET_KEY=your_thirdweb_secret_key_here
    TREASURY_WALLET_ADDRESS=0x...
-   THIRDWEB_API_BASE_URL=https://api.thirdweb-dev.com
+   THIRDWEB_API_BASE_URL=https://api.thirdweb.com
    ```
 
 3. **Required Setup**
 
    - Get your thirdweb secret key from the [thirdweb dashboard](https://thirdweb.com/dashboard)
    - Deploy or have access to an ERC-20 token contract
-   - Set up a treasury server wallet with sufficient token balance
+   - Your treasury wallet should be a server wallet. You can create one on your thirdweb dashboard. Ensure it has sufficient token balance.
 
 4. **Run the Development Server**
 
@@ -58,7 +68,7 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 
 5. **Open the Game**
    - Navigate to `http://localhost:3000`
-   - Enter a username to create a wallet and start playing
+   - Enter your email and verify the 6-digit code to create your wallet and start playing
 
 ## Environment Variables
 
@@ -82,28 +92,21 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 
 ### API Routes
 
-- `POST /api/user` - Create/login user with wallet
-- `GET /api/balance` - Get user's token balance
-- `POST /api/reward` - Send tokens to user (called on target hit)
+- `POST /api/auth/send-code` - Send email OTP
+- `POST /api/auth/verify-code` - Verify OTP and create session
+- `POST /api/auth/logout` - Clear session cookies
+- `GET /api/balance?address=0x...` - Get a wallet's token balance
+- `GET /api/treasury-balance` - Get treasury wallet token balance
+- `POST /api/reward` - Send tokens from treasury to player (on hit)
+- `POST /api/penalty` - Send tokens from player to treasury (on miss)
+- `POST /api/withdraw` - Withdraw a player's full balance to a recipient
 - `GET /api/transaction/[id]` - Get transaction status
 - `GET /api/transactions` - List recent transactions
+- `GET /api/leaderboard` - Show top score holders
 
 ### thirdweb Integration
 
-All thirdweb API logic is contained in [`src/lib/thirdweb.ts`](src/lib/thirdweb.ts). This file handles wallet creation, token transfers, balance queries, and transaction management through the thirdweb SDK.
-
-### Components
-
-- `LoginForm` - User authentication
-- `GameHeader` - User info and balance display
-- `GameArena` - Main game area with target spawning
-- `TransactionList` - Real-time transaction history
-
-### State Management
-
-- React hooks for local state management
-- Real-time transaction polling for status updates
-- Automatic balance refresh every 5 seconds (with throttling)
+All thirdweb API logic is contained in [`src/lib/thirdweb.ts`](src/lib/thirdweb.ts). This file uses the thirdweb API to perform wallet operations, contract reads/writes, token transfers, transaction queries, and leaderboard data.
 
 ## Customization
 
@@ -119,7 +122,7 @@ const TARGET_LIFETIME = 3000; // 3 seconds
 
 ### Reward/Penalty Amounts
 
-Reward and penalty amounts are specified in token units within their respective API routes and then converted to base units. Token address, decimals, and chain ID are now hardcoded in `src/lib/constants.ts`.
+Reward and penalty amounts are specified in token units within their respective API routes and then converted to base units. Token address, decimals, and chain ID are configured in `src/lib/constants.ts`.
 
 ## Troubleshooting
 
