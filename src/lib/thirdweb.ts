@@ -97,6 +97,21 @@ export async function getTransaction(transactionId: string) {
   return response;
 }
 
+export async function getTokenOwners(
+  chainId: number,
+  tokenAddress: string,
+  limit: number = 3
+) {
+  const response = await makeThirdwebRequest(
+    `/v1/tokens/${chainId}/${tokenAddress}/owners?limit=${limit}`,
+    {
+      method: "GET",
+    }
+  );
+
+  return response;
+}
+
 export async function listTransactions(page: number = 1, limit: number = 10) {
   const response = await makeThirdwebRequest(
     `/v1/transactions?page=${page}&limit=${limit}`,

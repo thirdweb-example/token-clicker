@@ -7,6 +7,7 @@ import { GameHeader } from '@/components/game/game-header'
 import { GameArena } from '@/components/game/game-arena'
 import { GameInfo } from '@/components/game/game-info'
 import { TransactionList } from '@/components/game/transaction-list'
+import { LeaderboardCard } from '@/components/game/leaderboard-card'
 import { generateUniqueId } from '@/lib/utils'
 import { useSendReward, useSendPenalty, useTransaction } from '@/lib/hooks/use-game-api'
 import { UNAUTHORIZED_EVENT } from '@/lib/client-auth'
@@ -338,7 +339,7 @@ export default function HomePage() {
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <GameArena 
               user={user}
               onTargetHit={handleTargetHit}
@@ -346,6 +347,7 @@ export default function HomePage() {
               onGameEnd={handleGameEnd}
               onGameStateChange={handleGameStateChange}
             />
+            <LeaderboardCard />
           </div>
           
           <div className="lg:col-span-1 space-y-6">
