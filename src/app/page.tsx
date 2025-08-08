@@ -9,6 +9,7 @@ import { GameInfo } from '@/components/game/game-info'
 import { TransactionList } from '@/components/game/transaction-list'
 import { generateUniqueId } from '@/lib/utils'
 import { useSendReward, useSendPenalty, useTransaction } from '@/lib/hooks/use-game-api'
+import { UNAUTHORIZED_EVENT } from '@/lib/client-auth'
 
 const USER_STORAGE_KEY = 'token-clicker-user'
 
@@ -74,7 +75,7 @@ export default function HomePage() {
     try {
       // Send reward using React Query mutation with auth token and game session data
       const result = await sendRewardMutation.mutateAsync({
-        authToken: user.authToken,
+        csrfToken: user.csrfToken,
         gameSessionData: gameSessionRef.current.startTime ? {
           gameStartTime: gameSessionRef.current.startTime,
           targetHitTime: Date.now()
@@ -143,9 +144,7 @@ export default function HomePage() {
 
     try {
       // Send penalty using React Query mutation
-      const result = await sendPenaltyMutation.mutateAsync({ 
-        authToken: user.authToken 
-      })
+      const result = await sendPenaltyMutation.mutateAsync({ csrfToken: user.csrfToken })
       
       const actualPenalty = parseFloat(result.actualAmount) / Math.pow(10, 18) // Convert from wei to tokens
       
@@ -244,6 +243,8 @@ export default function HomePage() {
   // Clear user from localStorage (logout)
   const handleLogout = useCallback(() => {
     try {
+      // Tell server to clear cookies
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
       localStorage.removeItem(USER_STORAGE_KEY)
       setUser(null)
       setTransactions([])
@@ -255,6 +256,15 @@ export default function HomePage() {
       console.error('Failed to clear user from localStorage:', error)
     }
   }, [])
+
+  // Listen for global 401 and force logout
+  useEffect(() => {
+    const onUnauthorized = () => {
+      handleLogout()
+    }
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+  }, [handleLogout])
 
   // Handle user login
   const handleLogin = useCallback(async (newUser: User) => {

@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTokenBalance } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
+import { verifySessionAndCsrf } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const address = searchParams.get('address')
     
-    // Check for auth token
-    const authToken = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication token required' },
-        { status: 401 }
-      )
+    // Verify cookie session + CSRF for GET is typically not required. But we still require session.
+    let authToken: string
+    try {
+      const session = verifySessionAndCsrf(request, { requireCsrfForMethods: new Set() })
+      authToken = session.authToken
+    } catch (err: any) {
+      const code = err?.message
+      const map: Record<string, number> = {
+        NO_SESSION: 401,
+      }
+      return NextResponse.json({ error: code || 'Unauthorized' }, { status: map[code] || 401 })
     }
 
     if (!address) {

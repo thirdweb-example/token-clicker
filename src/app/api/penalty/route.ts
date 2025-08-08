@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTokenBalance, transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
+import { verifySessionAndCsrf } from '@/lib/auth'
 
 const PENALTY_AMOUNT = '50000000000000000' // 0.05 tokens (assuming 18 decimals)
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from headers
-    const authToken = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!authToken) {
-      return NextResponse.json(
-        { error: 'Authentication token required' },
-        { status: 401 }
-      )
+    // Verify cookie session + CSRF
+    let authToken: string
+    try {
+      const session = verifySessionAndCsrf(request)
+      authToken = session.authToken
+    } catch (err: any) {
+      const code = err?.message
+      const map: Record<string, number> = {
+        NO_SESSION: 401,
+        INVALID_CSRF: 403,
+        BAD_ORIGIN: 403,
+      }
+      return NextResponse.json({ error: code || 'Unauthorized' }, { status: map[code] || 401 })
     }
 
     // Get user details from auth token

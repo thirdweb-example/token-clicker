@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { fetchWithSession } from '@/lib/client-auth'
 import { User, Transaction } from '@/lib/types'
 
 // Query Keys
@@ -12,17 +13,13 @@ export const QUERY_KEYS = {
 
 
 // Balance Queries
-export function useBalance(address: string | null, authToken: string | null, enabled = true) {
+export function useBalance(address: string | null, _authToken: string | null, enabled = true) {
   return useQuery({
     queryKey: QUERY_KEYS.balance(address || ''),
     queryFn: async () => {
-      if (!address || !authToken) throw new Error('No address or auth token provided')
+      if (!address) throw new Error('No address provided')
       
-      const response = await fetch(`/api/balance?address=${address}`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
-      })
+      const response = await fetchWithSession(`/api/balance?address=${address}`)
       if (!response.ok) {
         throw new Error('Failed to fetch balance')
       }
@@ -30,7 +27,7 @@ export function useBalance(address: string | null, authToken: string | null, ena
       const data = await response.json()
       return data.balance
     },
-    enabled: enabled && !!address && !!authToken,
+    enabled: enabled && !!address,
     staleTime: 4 * 1000, // 4 seconds
     refetchInterval: 5 * 1000, // 5 seconds
   })
@@ -41,18 +38,18 @@ export function useSendReward() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ authToken, gameSessionData }: { 
-      authToken: string;
+    mutationFn: async ({ csrfToken, gameSessionData }: { 
+      csrfToken: string;
       gameSessionData?: {
         gameStartTime: number;
         targetHitTime: number;
       }
     }) => {
-      const response = await fetch('/api/reward', {
+      const response = await fetchWithSession('/api/reward', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          'X-CSRF-Token': csrfToken,
         },
         body: JSON.stringify({ gameSessionData }),
       })
@@ -64,7 +61,7 @@ export function useSendReward() {
 
       return response.json()
     },
-    onSuccess: (data: any, { authToken }: { authToken: string; gameSessionData?: any }) => {
+    onSuccess: () => {
       // Invalidate all balance queries since we don't have playerAddress anymore
       queryClient.invalidateQueries({
         queryKey: ['balance']
@@ -83,12 +80,12 @@ export function useSendPenalty() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: async ({ authToken }: { authToken: string }) => {
-      const response = await fetch('/api/penalty', {
+    mutationFn: async ({ csrfToken }: { csrfToken: string }) => {
+      const response = await fetchWithSession('/api/penalty', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
+          'X-CSRF-Token': csrfToken,
         },
         body: JSON.stringify({}),
       })
@@ -100,7 +97,7 @@ export function useSendPenalty() {
 
       return response.json()
     },
-    onSuccess: (data: any, { authToken }: { authToken: string }) => {
+    onSuccess: () => {
       // Invalidate all balance queries since we don't have playerAddress anymore
       queryClient.invalidateQueries({
         queryKey: ['balance']

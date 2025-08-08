@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { env } from '@/lib/env'
 import { User } from '@/lib/types'
+import { setSessionCookies, generateCsrfToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,16 +38,26 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    
+
+    // Generate CSRF up front so we can include it in body
+    const csrfToken = generateCsrfToken()
+
     const user: User = {
       id: email,
       email,
       walletAddress: data.walletAddress,
-      authToken: data.token,
       createdAt: new Date().toISOString(),
+      csrfToken,
     }
 
-    return NextResponse.json({ user })
+    const res = NextResponse.json({ user })
+    setSessionCookies(res, {
+      authToken: data.token,
+      sessionMaxAgeSeconds: 60 * 60 * 24 * 7,
+      csrfMaxAgeSeconds: 60 * 60 * 24 * 7,
+      csrfToken,
+    })
+    return res
   } catch (error) {
     console.error('Error verifying login code:', error)
     return NextResponse.json(

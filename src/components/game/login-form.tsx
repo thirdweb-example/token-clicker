@@ -58,6 +58,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
       const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, code: code.trim() }),
       })
 
@@ -66,8 +67,9 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         throw new Error(errorData.error || 'Failed to verify code')
       }
 
+      const csrfToken = response.headers.get('X-CSRF-Token') || ''
       const result = await response.json()
-      onLogin(result.user)
+      onLogin({ ...result.user, csrfToken })
     } catch (error) {
       console.error('Failed to verify code:', error)
       setError(error instanceof Error ? error.message : 'Failed to verify code')

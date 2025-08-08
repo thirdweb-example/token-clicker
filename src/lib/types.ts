@@ -2,9 +2,9 @@ export interface User {
   id: string;
   email: string;
   walletAddress: string;
-  authToken: string;
   smartWalletAddress?: string;
   createdAt: string;
+  csrfToken: string;
 }
 
 export interface GameTarget {

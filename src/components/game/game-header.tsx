@@ -16,7 +16,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
   const { 
     data: balance, 
     isLoading: isBalanceLoading
-  } = useBalance(user.walletAddress, user.authToken)
+  } = useBalance(user.walletAddress, null)
 
   const { isEnabled: soundEnabled, toggleSound, playTokenGainSound, playTokenLossSound, playClickSound } = useSound()
 
