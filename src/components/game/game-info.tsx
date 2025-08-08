@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { GameState, SessionStats } from '@/lib/types'
+import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface GameInfoProps {
   gameState: GameState
@@ -47,7 +48,7 @@ export function GameInfo({ gameState, sessionStats }: GameInfoProps) {
       <div className="mt-4 pt-4 border-t border-gray-600">
         <div className="text-center">
           <div className={`text-xl font-bold ${sessionStats.totalGains >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            💰 {sessionStats.totalGains > 0 ? '+' : ''}{sessionStats.totalGains.toFixed(2)} tokens
+            💰 {sessionStats.totalGains > 0 ? '+' : ''}{sessionStats.totalGains.toFixed(2)} {TOKEN_SYMBOL}
           </div>
           <div className="text-xs text-gray-300">Session Total</div>
         </div>

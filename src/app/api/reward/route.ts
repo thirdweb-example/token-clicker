@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 import { verifySessionAndCsrf } from '@/lib/auth'
+import { toBaseUnits } from '@/lib/utils'
+import { TOKEN_CONTRACT_ADDRESS, TOKEN_DECIMALS, CHAIN_ID } from '@/lib/constants'
 
-const REWARD_AMOUNT = '10000000000000000' // 0.01 tokens (assuming 18 decimals)
+// Human-readable reward amount in token units
+const REWARD_TOKENS = '0.01'
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,14 +73,14 @@ export async function POST(request: NextRequest) {
     const result = await transferTokens(
       env.TREASURY_WALLET_ADDRESS,
       playerAddress,
-      REWARD_AMOUNT,
-      env.TOKEN_CONTRACT_ADDRESS,
-      env.CHAIN_ID
+      toBaseUnits(REWARD_TOKENS, TOKEN_DECIMALS),
+      TOKEN_CONTRACT_ADDRESS,
+      CHAIN_ID
     )
 
     return NextResponse.json({ 
       transactionIds: result.transactionIds,
-      amount: REWARD_AMOUNT 
+      amount: toBaseUnits(REWARD_TOKENS, TOKEN_DECIMALS)
     })
   } catch (error) {
     console.error('Error sending reward:', error)

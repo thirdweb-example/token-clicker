@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Transaction } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatWalletAddress } from '@/lib/utils'
+import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface TransactionListProps {
   transactions: Transaction[]
@@ -75,7 +76,7 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
             <div className="text-center text-gray-300 py-8">
               <div className="text-4xl mb-4">🎯</div>
               <p>No transactions yet.</p>
-              <p className="text-sm text-gray-400 mt-2">Hit some targets to earn tokens!</p>
+              <p className="text-sm text-gray-400 mt-2">Hit some targets to earn {TOKEN_SYMBOL.toLowerCase()}!</p>
             </div>
           ) : (
             localTransactions.map((transaction) => (
@@ -95,8 +96,8 @@ export function TransactionList({ transactions, onTransactionUpdate }: Transacti
                       transaction.amount.startsWith('-') ? 'text-red-400' : 'text-green-400'
                     }`}>
                       {transaction.amount.startsWith('-') ? 
-                        `${transaction.amount} tokens` : 
-                        `+${transaction.amount} tokens`
+                        `${transaction.amount} ${TOKEN_SYMBOL}` : 
+                        `+${transaction.amount} ${TOKEN_SYMBOL}`
                       }
                     </span>
                   </div>

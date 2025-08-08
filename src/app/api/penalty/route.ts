@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getTokenBalance, transferTokens, getUserDetails } from '@/lib/thirdweb'
 import { env } from '@/lib/env'
 import { verifySessionAndCsrf } from '@/lib/auth'
+import { toBaseUnits } from '@/lib/utils'
+import { TOKEN_CONTRACT_ADDRESS, TOKEN_DECIMALS, CHAIN_ID } from '@/lib/constants'
 
-const PENALTY_AMOUNT = '50000000000000000' // 0.05 tokens (assuming 18 decimals)
+// Human-readable penalty amount in token units
+const PENALTY_TOKENS = '0.05'
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,12 +49,12 @@ export async function POST(request: NextRequest) {
     // Get token balance for the specified token
     const balance = await getTokenBalance(
         playerAddress,
-        env.TOKEN_CONTRACT_ADDRESS,
-        env.CHAIN_ID
+        TOKEN_CONTRACT_ADDRESS,
+        CHAIN_ID
       )
 
     const currentBalance = BigInt(balance.data)
-    const penaltyAmountBigInt = BigInt(PENALTY_AMOUNT)
+    const penaltyAmountBigInt = BigInt(toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS))
 
     // Calculate actual transfer amount - use full penalty or available balance, whichever is smaller
     const transferAmount = currentBalance < penaltyAmountBigInt ? currentBalance : penaltyAmountBigInt
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (transferAmount === BigInt(0)) {
       return NextResponse.json({
         transactionIds: [],
-        amount: PENALTY_AMOUNT,
+        amount: toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS),
         actualAmount: '0'
       })
     }
@@ -70,14 +73,14 @@ export async function POST(request: NextRequest) {
       playerAddress,
       env.TREASURY_WALLET_ADDRESS,
       transferAmount.toString(),
-      env.TOKEN_CONTRACT_ADDRESS,
-      env.CHAIN_ID,
+      TOKEN_CONTRACT_ADDRESS,
+      CHAIN_ID,
       authToken
     )
 
     return NextResponse.json({ 
       transactionIds: result.transactionIds,
-      amount: PENALTY_AMOUNT,
+      amount: toBaseUnits(PENALTY_TOKENS, TOKEN_DECIMALS),
       actualAmount: transferAmount.toString()
     })
   } catch (error) {

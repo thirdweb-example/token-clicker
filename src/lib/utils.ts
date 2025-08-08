@@ -14,6 +14,15 @@ export function formatTokenAmount(amount: string, decimals: number = 18): string
   return value.toFixed(2)
 }
 
+export function toBaseUnits(tokenAmount: string, decimals: number = 18): string {
+  const [whole, fraction = ''] = tokenAmount.split('.')
+  const paddedFraction = (fraction + '0'.repeat(decimals)).slice(0, decimals)
+  const multiplier = BigInt('1' + '0'.repeat(decimals))
+  const base = BigInt(whole || '0') * multiplier
+  const frac = BigInt(paddedFraction || '0')
+  return (base + frac).toString()
+}
+
 export function generateRandomPosition(containerWidth: number, containerHeight: number, targetSize: number = 60) {
   const x = Math.random() * (containerWidth - targetSize)
   const y = Math.random() * (containerHeight - targetSize)

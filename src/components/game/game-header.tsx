@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatWalletAddress, formatTokenAmount } from '@/lib/utils'
 import { useBalance } from '@/lib/hooks/use-game-api'
 import { useSound } from '@/lib/contexts/sound-context'
+import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface GameHeaderProps {
   user: User
@@ -119,7 +120,7 @@ export function GameHeader({ user, onLogout }: GameHeaderProps) {
               {isBalanceLoading ? (
                 <div className="animate-pulse shimmer">Loading...</div>
               ) : (
-                `💰 ${formatTokenAmount(balance?.data || '0')} tokens`
+                `💰 ${formatTokenAmount(balance?.data || '0')} ${TOKEN_SYMBOL}`
               )}
             </div>
             

@@ -5,6 +5,7 @@ import { User } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface LoginFormProps {
   onLogin: (user: User) => void
@@ -100,7 +101,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             Token Clicker Game
           </CardTitle>
           <p className="text-gray-300 mt-2">
-            Hit targets, earn tokens, have fun! 🚀
+            Hit targets, earn {TOKEN_SYMBOL.toLowerCase()}, have fun! 🚀
           </p>
         </CardHeader>
         <CardContent>
@@ -193,7 +194,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           
           <div className="mt-6 text-center text-xs text-gray-400">
             <p>🔐 Your wallet will be created automatically</p>
-            <p>💎 Hit targets to earn 0.01 tokens each</p>
+            <p>💎 Hit targets to earn 0.01 {TOKEN_SYMBOL.toLowerCase()} each</p>
             <p>⏱️ Each game lasts 10 seconds</p>
           </div>
         </CardContent>

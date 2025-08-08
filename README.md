@@ -41,8 +41,6 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
    ```env
    THIRDWEB_SECRET_KEY=your_thirdweb_secret_key_here
    TREASURY_WALLET_ADDRESS=0x...
-   TOKEN_CONTRACT_ADDRESS=0x...
-   CHAIN_ID=8453
    THIRDWEB_API_BASE_URL=https://api.thirdweb-dev.com
    ```
 
@@ -68,8 +66,6 @@ A fun Next.js web game that integrates with the thirdweb API to create a clickin
 | ------------------------- | --------------------------------------------------- |
 | `THIRDWEB_SECRET_KEY`     | Your thirdweb secret key for backend authentication |
 | `TREASURY_WALLET_ADDRESS` | Wallet address that holds and distributes tokens    |
-| `TOKEN_CONTRACT_ADDRESS`  | Address of the ERC-20 token contract                |
-| `CHAIN_ID`                | Blockchain network ID (e.g., 8453 for Base)         |
 | `THIRDWEB_API_BASE_URL`   | thirdweb API base URL                               |
 
 ## Game Rules
@@ -121,13 +117,9 @@ const TARGET_SPAWN_INTERVAL = 2000; // 2 seconds
 const TARGET_LIFETIME = 3000; // 3 seconds
 ```
 
-### Reward Amount
+### Reward/Penalty Amounts
 
-Edit the reward amount in `src/app/api/reward/route.ts`:
-
-```typescript
-const REWARD_AMOUNT = "10000000000000000"; // 0.01 tokens (18 decimals)
-```
+Reward and penalty amounts are specified in token units within their respective API routes and then converted to base units. Token address, decimals, and chain ID are now hardcoded in `src/lib/constants.ts`.
 
 ## Troubleshooting
 
