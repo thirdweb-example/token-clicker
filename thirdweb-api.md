@@ -5771,3 +5771,184 @@ Completes a payment using its default token and amount. If the user does not hav
 ##### Status: 402 Payment required. Insufficient wallet balance to complete the purchase.
 
 ##### Status: 500 Internal server error. This may occur due to network connectivity issues, wallet creation failures, or transaction execution failures.
+
+### List Tokens
+
+- **Method:** `GET`
+- **Path:** `/v1/tokens`
+- **Tags:** Tokens
+
+Lists or search existing tokens based on the provided filters. Supports querying by chain ID, token address, symbol, and/or name.
+
+**Authentication**: Pass `x-client-id` header for frontend usage from allowlisted origins or `x-secret-key` for backend usage.
+
+#### Responses
+
+##### Status: 200 Tokens returned successfully.
+
+###### Content-Type: application/json
+
+- **`pagination` (required)**
+
+  `object`
+
+  - **`hasMore`**
+
+    `boolean` — Whether there are more items available
+
+  - **`limit`**
+
+    `number | null`, default: `20` — Number of items per page
+
+  - **`page`**
+
+    `number | null`, default: `1` — Current page number
+
+  - **`totalCount`**
+
+    `number` — Total number of items available
+
+- **`tokens` (required)**
+
+  `array`
+
+  **Items:**
+
+  - **`address` (required)**
+
+    `string` — A valid Ethereum address (0x-prefixed hex string) or ENS name (e.g., vitalik.eth).
+
+  - **`chainId` (required)**
+
+    `integer` — The blockchain network identifier. Common values include: 1 (Ethereum), 8453 (Base), 137 (Polygon), 56 (BSC), 43114 (Avalanche), 42161 (Arbitrum), 10 (Optimism).
+
+  - **`decimals` (required)**
+
+    `number`
+
+  - **`prices` (required)**
+
+    `object` — Token price in different FIAT currencies.
+
+  - **`symbol` (required)**
+
+    `string`
+
+  - **`iconUri`**
+
+    `string`
+
+**Example:**
+
+```
+{
+  "pagination": {
+    "hasMore": true,
+    "limit": 20,
+    "page": 1,
+    "totalCount": 1
+  },
+  "tokens": [
+    {
+      "chainId": 1,
+      "address": "",
+      "decimals": 1,
+      "symbol": "",
+      "iconUri": "",
+      "prices": {
+        "USD": 1,
+        "EUR": 0.84
+      }
+    }
+  ]
+}
+```
+
+##### Status: 400 Invalid request parameters.
+
+##### Status: 401 Authentication required. For backend usage, include \`x-secret-key\` header. For frontend usage, include \`x-client-id\` + \`Authorization: Bearer \<jwt>\` headers.
+
+##### Status: 500 Internal server error. This may occur due to network connectivity issues, wallet creation failures, or transaction execution failures.
+
+### Get Token Owners
+
+- **Method:** `GET`
+- **Path:** `/v1/tokens/{chainId}/{address}/owners`
+- **Tags:** Tokens
+
+Retrieves a paginated list of owners for a given ERC-20 token contract on a specific chain.
+
+**Authentication**: Pass `x-client-id` header for frontend usage from allowlisted origins or `x-secret-key` for backend usage.
+
+#### Responses
+
+##### Status: 200 Token owners retrieved successfully. Returns owners with pagination information.
+
+###### Content-Type: application/json
+
+- **`result` (required)**
+
+  `object`
+
+  - **`owners` (required)**
+
+    `array` — Array of token owners with amounts.
+
+    **Items:**
+
+    - **`address` (required)**
+
+      `string` — Owner wallet address
+
+    - **`amount` (required)**
+
+      `string` — Token amount owned as a string
+
+  - **`pagination` (required)**
+
+    `object`
+
+    - **`hasMore`**
+
+      `boolean` — Whether there are more items available
+
+    - **`limit`**
+
+      `number | null`, default: `20` — Number of items per page
+
+    - **`page`**
+
+      `number | null`, default: `1` — Current page number
+
+    - **`totalCount`**
+
+      `number` — Total number of items available
+
+**Example:**
+
+```
+{
+  "result": {
+    "owners": [
+      {
+        "address": "",
+        "amount": ""
+      }
+    ],
+    "pagination": {
+      "hasMore": true,
+      "limit": 20,
+      "page": 1,
+      "totalCount": 1
+    }
+  }
+}
+```
+
+##### Status: 400 Invalid request parameters.
+
+##### Status: 401 Authentication required. The request must include a valid \`x-client-id\` header for frontend usage or x-secret-key for backend usage.
+
+##### Status: 404 Token not found or no owners available.
+
+##### Status: 500 Internal server error.

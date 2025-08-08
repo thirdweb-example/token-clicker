@@ -3,6 +3,26 @@ import { env } from '@/lib/env'
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF: Enforce same-origin for POST requests using Origin/Referer headers
+    const originHeader = request.headers.get('origin')
+    const refererHeader = request.headers.get('referer')
+    const allowedOrigin = request.nextUrl.origin
+
+    let requestOrigin: string | null = null
+    if (originHeader) {
+      requestOrigin = originHeader
+    } else if (refererHeader) {
+      try {
+        requestOrigin = new URL(refererHeader).origin
+      } catch {
+        requestOrigin = null
+      }
+    }
+
+    if (!requestOrigin || requestOrigin !== allowedOrigin) {
+      return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
+    }
+
     const { email } = await request.json()
 
     if (!email) {

@@ -98,7 +98,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🎯</div>
           <CardTitle className="text-3xl font-bold text-white glow-text">
-            Token Clicker Game
+            Vibe Shooter
           </CardTitle>
           <p className="text-gray-300 mt-2">
             Hit targets, earn {TOKEN_SYMBOL.toLowerCase()}, have fun! 🚀

@@ -7,8 +7,8 @@ import { TOKEN_SYMBOL } from '@/lib/constants'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: `Token Clicker Game`,
-  description: `A fun clicking game where you earn ${TOKEN_SYMBOL} for hitting targets`,
+  title: `Vibe Shooter`,
+  description: `A fun shooting game where you earn ${TOKEN_SYMBOL} for hitting targets`,
 }
 
 export default function RootLayout({
