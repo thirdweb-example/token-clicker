@@ -6,6 +6,7 @@ import { User, Transaction } from '@/lib/types'
 export const QUERY_KEYS = {
   user: (username: string) => ['user', username],
   balance: (address: string) => ['balance', address],
+  treasuryBalance: ['treasuryBalance'] as const,
   transactions: (page?: number, limit?: number) => ['transactions', page, limit],
   transaction: (id: string) => ['transaction', id],
 } as const
@@ -30,6 +31,24 @@ export function useBalance(address: string | null, _authToken: string | null, en
     enabled: enabled && !!address,
     staleTime: 4 * 1000, // 4 seconds
     refetchInterval: 5 * 1000, // 5 seconds
+  })
+}
+
+// Treasury balance (reward pool)
+export function useTreasuryBalance(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.treasuryBalance,
+    queryFn: async () => {
+      const response = await fetchWithSession('/api/treasury-balance')
+      if (!response.ok) {
+        throw new Error('Failed to fetch treasury balance')
+      }
+      const data = await response.json()
+      return data.balance
+    },
+    enabled,
+    staleTime: 5 * 1000,
+    refetchInterval: 7 * 1000,
   })
 }
 

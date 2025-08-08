@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { GameState, GameTarget, User } from '@/lib/types'
-import { generateRandomPosition, generateUniqueId } from '@/lib/utils'
+import { generateRandomPosition, generateUniqueId, formatTokenAmount } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useSound } from '@/lib/contexts/sound-context'
+import { useTreasuryBalance } from '@/lib/hooks/use-game-api'
+import { TOKEN_SYMBOL } from '@/lib/constants'
 
 interface GameArenaProps {
   user: User
@@ -31,6 +33,8 @@ interface LaserBeam {
 
 export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameStateChange }: GameArenaProps) {
   const { playTargetHitSound, playTargetMissSound } = useSound()
+  const { data: treasuryBalance, isLoading: isTreasuryLoading } = useTreasuryBalance(true)
+  const isPrizePoolEmpty = !isTreasuryLoading && (treasuryBalance?.data === '0')
   
   const [gameState, setGameState] = useState<GameState>({
     timeLeft: GAME_DURATION / 1000,
@@ -414,12 +418,25 @@ export function GameArena({ user, onTargetHit, onTargetMiss, onGameEnd, onGameSt
             <div className="text-center">
               <div className="text-4xl mb-4">🎯</div>
               <Button 
-                onClick={startGame} 
+                onClick={startGame}
+                disabled={isPrizePoolEmpty}
                 size="lg"
                 className="gradient-button text-white font-bold px-8 py-4 text-lg rounded-xl border-0"
               >
                 🚀 Start Game
               </Button>
+              <div className="mt-3 text-sm text-gray-200">
+                {isTreasuryLoading ? (
+                  <span className="opacity-80">Fetching prize pool...</span>
+                ) : (
+                  <span>
+                    Prize pool remaining: <span className="font-semibold text-green-300">{formatTokenAmount(treasuryBalance?.data || '0')}  {TOKEN_SYMBOL}</span>
+                  </span>
+                )}
+              </div>
+              {isPrizePoolEmpty && (
+                <div className="mt-2 text-sm font-semibold text-red-300">Come back later!</div>
+              )}
             </div>
           </div>
         )}
